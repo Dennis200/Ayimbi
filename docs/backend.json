@@ -1,193 +1,458 @@
 {
   "entities": {
-    "user": {
-      "title": "User",
-      "description": "A user of the application.",
+    "Song": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Song",
       "type": "object",
+      "description": "Represents a song in the MuseFlow application.",
       "properties": {
-        "name": {
+        "id": {
           "type": "string",
-          "description": "The user's name."
+          "description": "Unique identifier for the Song entity."
         },
-        "username": {
-          "type": "string",
-          "description": "The user's unique username."
-        },
-        "bio": {
-            "type": "string",
-            "description": "A short biography of the user."
-        },
-        "email": {
-          "type": "string",
-          "description": "The user's email address."
-        },
-        "avatarUrl": {
-          "type": "string",
-          "description": "URL of the user's avatar image."
-        },
-        "coverPhotoUrl": {
-          "type": "string",
-          "description": "URL for the user's profile cover photo."
-        },
-        "socials": {
-            "type": "object",
-            "properties": {
-                "twitter": { "type": "string" },
-                "instagram": { "type": "string" },
-                "website": { "type": "string" }
-            }
-        },
-        "role": {
-          "type": "string",
-          "enum": ["user", "creator", "admin"],
-          "description": "The user's role in the application."
-        }
-      },
-      "required": ["name", "email", "role"]
-    },
-    "artist": {
-      "title": "Artist",
-      "description": "A musical artist or band.",
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "The name of the artist."
-        },
-        "avatarUrl": {
-          "type": "string",
-          "description": "URL of the artist's avatar image."
-        },
-        "bio": {
-          "type": "string",
-          "description": "A short biography of the artist."
-        }
-      },
-      "required": ["name"]
-    },
-    "album": {
-      "title": "Album",
-      "description": "A music album or EP.",
-      "type": "object",
-      "properties": {
         "title": {
           "type": "string",
-          "description": "The title of the album."
-        },
-        "type": {
-          "type": "string",
-          "enum": ["album", "ep"],
-          "description": "The type of release."
+          "description": "Title of the song."
         },
         "artistId": {
           "type": "string",
-          "description": "The ID of the artist."
+          "description": "Reference to the Artist who created the song. (Relationship: Artist 1:N Song)"
         },
-        "artistName": {
-            "type": "string",
-            "description": "The name of the artist."
-        },
-        "artworkUrl": {
+        "albumId": {
           "type": "string",
-          "description": "URL of the album's artwork."
-        },
-        "releaseDate": {
-          "type": "string",
-          "format": "date",
-          "description": "The release date of the album."
-        }
-      },
-      "required": ["title", "type", "artistId", "artistName", "releaseDate"]
-    },
-    "song": {
-      "title": "Song",
-      "description": "A single song or track.",
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string",
-          "description": "The title of the song."
+          "description": "Reference to the Album this song belongs to. (Relationship: Album 1:N Song)"
         },
         "genre": {
-            "type": "string",
-            "description": "The genre of the song.",
-            "enum": ["Electronic", "Acoustic", "Rock", "Pop", "Hip-Hop", "Jazz", "Classical"]
+          "type": "string",
+          "description": "Genre of the song (e.g., Pop, Rock, Hip Hop)."
         },
         "duration": {
           "type": "number",
           "description": "Duration of the song in seconds."
         },
-        "artistId": {
-          "type": "string",
-          "description": "The ID of the artist."
-        },
-        "artistName": {
-            "type": "string",
-            "description": "The name of the artist."
-        },
-        "albumId": {
-          "type": "string",
-          "description": "The ID of the album this song belongs to."
-        },
-        "albumTitle": {
-            "type": "string",
-            "description": "The title of the album."
-        },
-        "artworkUrl": {
-            "type": "string",
-            "description": "The URL for the song's artwork."
+        "trackNumber": {
+          "type": "number",
+          "description": "Track number of the song within the album."
         },
         "audioUrl": {
           "type": "string",
-          "description": "URL of the audio file for the song."
-        },
-        "likes": {
-          "type": "number",
-          "description": "Number of likes the song has received."
-        },
-        "shares": {
-          "type": "number",
-          "description": "Number of times the song has been shared."
-        },
-        "downloadCount": {
-          "type": "number",
-          "description": "Number of times the song has been downloaded."
+          "description": "URL of the audio file for the song.",
+          "format": "uri"
         },
         "lyrics": {
           "type": "string",
-          "description": "The lyrics of the song."
+          "description": "Lyrics of the song."
+        },
+        "artworkUrl": {
+          "type": "string",
+          "description": "URL of the artwork associated with the song.",
+          "format": "uri"
+        },
+        "likeIds": {
+          "type": "array",
+          "description": "References to Likes. (Relationship: Song 1:N Like)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "commentIds": {
+          "type": "array",
+          "description": "References to Comments. (Relationship: Song 1:N Comment)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "playCount": {
+          "type": "number",
+          "description": "Total number of times the song has been played."
         }
       },
-      "required": ["title", "duration", "artistId", "artistName", "albumId", "albumTitle", "audioUrl"]
+      "required": [
+        "id",
+        "title",
+        "artistId",
+        "audioUrl"
+      ]
+    },
+    "Artist": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Artist",
+      "type": "object",
+      "description": "Represents an artist or creator on the MuseFlow platform.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Artist entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the artist or creator."
+        },
+        "bio": {
+          "type": "string",
+          "description": "Biography or description of the artist."
+        },
+        "artworkUrl": {
+          "type": "string",
+          "description": "URL of the artist's profile picture or artwork.",
+          "format": "uri"
+        },
+        "songIds": {
+          "type": "array",
+          "description": "References to Songs. (Relationship: Artist 1:N Song)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "albumIds": {
+          "type": "array",
+          "description": "References to Albums. (Relationship: Artist 1:N Album)",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "Album": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Album",
+      "type": "object",
+      "description": "Represents an album or EP on the MuseFlow platform.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Album entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the album."
+        },
+        "artistId": {
+          "type": "string",
+          "description": "Reference to the Artist who created the album. (Relationship: Artist 1:N Album)"
+        },
+        "releaseDate": {
+          "type": "string",
+          "description": "Release date of the album.",
+          "format": "date-time"
+        },
+        "artworkUrl": {
+          "type": "string",
+          "description": "URL of the album artwork.",
+          "format": "uri"
+        },
+        "songIds": {
+          "type": "array",
+          "description": "References to Songs contained in the Album. (Relationship: Album 1:N Song)",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "artistId",
+        "releaseDate"
+      ]
+    },
+    "Playlist": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Playlist",
+      "type": "object",
+      "description": "Represents a user-created playlist of songs.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Playlist entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User who created the playlist. (Relationship: User 1:N Playlist)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the playlist."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the playlist."
+        },
+        "songIds": {
+          "type": "array",
+          "description": "References to Songs contained in the playlist. (Relationship: Playlist N:N Song)",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "name"
+      ]
+    },
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the MuseFlow platform.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "username": {
+          "type": "string",
+          "description": "Username of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the user.",
+          "format": "email"
+        },
+        "profilePictureUrl": {
+          "type": "string",
+          "description": "URL of the user's profile picture.",
+          "format": "uri"
+        },
+        "bio": {
+          "type": "string",
+          "description": "User's biographical information."
+        },
+        "playlistIds": {
+          "type": "array",
+          "description": "References to Playlists created by the user. (Relationship: User 1:N Playlist)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "likeIds": {
+          "type": "array",
+          "description": "References to Likes. (Relationship: User 1:N Like)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "commentIds": {
+          "type": "array",
+          "description": "References to Comments created by the user. (Relationship: User 1:N Comment)",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "username",
+        "email"
+      ]
+    },
+    "Like": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Like",
+      "type": "object",
+      "description": "Represents a user's like of a song.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Like entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User who liked the song. (Relationship: User 1:N Like)"
+        },
+        "songId": {
+          "type": "string",
+          "description": "Reference to the Song that was liked. (Relationship: Song 1:N Like)"
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp of when the song was liked.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "songId",
+        "timestamp"
+      ]
+    },
+    "Comment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Comment",
+      "type": "object",
+      "description": "Represents a user's comment on a song.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Comment entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User who created the comment. (Relationship: User 1:N Comment)"
+        },
+        "songId": {
+          "type": "string",
+          "description": "Reference to the Song that the comment is on. (Relationship: Song 1:N Comment)"
+        },
+        "text": {
+          "type": "string",
+          "description": "Text content of the comment."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp of when the comment was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "songId",
+        "text",
+        "timestamp"
+      ]
     }
   },
   "auth": {
-    "providers": ["google.com", "password"]
+    "providers": [
+      "password",
+      "anonymous"
+    ]
   },
   "firestore": {
-    "/users/{userId}": {
-      "schema": {
-        "$ref": "#/entities/user"
+    "structure": [
+      {
+        "path": "/artists/{artistId}",
+        "definition": {
+          "entityName": "Artist",
+          "schema": {
+            "$ref": "#/backend/entities/Artist"
+          },
+          "description": "Stores artist information.  `artistId` is the unique identifier for the artist.",
+          "params": [
+            {
+              "name": "artistId",
+              "description": "Unique identifier for the artist."
+            }
+          ]
+        }
       },
-      "description": "Stores public profiles for users."
-    },
-    "/artists/{artistId}": {
-      "schema": {
-        "$ref": "#/entities/artist"
+      {
+        "path": "/albums/{albumId}",
+        "definition": {
+          "entityName": "Album",
+          "schema": {
+            "$ref": "#/backend/entities/Album"
+          },
+          "description": "Stores album information. `albumId` is the unique identifier for the album.",
+          "params": [
+            {
+              "name": "albumId",
+              "description": "Unique identifier for the album."
+            }
+          ]
+        }
       },
-      "description": "Stores information about music artists."
-    },
-    "/albums/{albumId}": {
-      "schema": {
-        "$ref": "#/entities/album"
+      {
+        "path": "/songs/{songId}",
+        "definition": {
+          "entityName": "Song",
+          "schema": {
+            "$ref": "#/backend/entities/Song"
+          },
+          "description": "Stores song information. `songId` is the unique identifier for the song.",
+          "params": [
+            {
+              "name": "songId",
+              "description": "Unique identifier for the song."
+            }
+          ]
+        }
       },
-      "description": "Stores album and EP details."
-    },
-    "/songs/{songId}": {
-      "schema": {
-        "$ref": "#/entities/song"
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile information.  `userId` matches `request.auth.uid` for ownership checks.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "Unique identifier for the user, corresponding to their Firebase Auth UID."
+            }
+          ]
+        }
       },
-      "description": "Stores individual song details."
-    }
+      {
+        "path": "/users/{userId}/playlists/{playlistId}",
+        "definition": {
+          "entityName": "Playlist",
+          "schema": {
+            "$ref": "#/backend/entities/Playlist"
+          },
+          "description": "Stores user created playlists. The `userId` must match `request.auth.uid` for ownership.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "Unique identifier for the user who owns the playlist."
+            },
+            {
+              "name": "playlistId",
+              "description": "Unique identifier for the playlist."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/songs/{songId}/likes/{likeId}",
+        "definition": {
+          "entityName": "Like",
+          "schema": {
+            "$ref": "#/backend/entities/Like"
+          },
+          "description": "Stores likes for each song. Ensures that each like is associated with a song.",
+          "params": [
+            {
+              "name": "songId",
+              "description": "Unique identifier for the song that was liked."
+            },
+            {
+              "name": "likeId",
+              "description": "Unique identifier for the like."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/songs/{songId}/comments/{commentId}",
+        "definition": {
+          "entityName": "Comment",
+          "schema": {
+            "$ref": "#/backend/entities/Comment"
+          },
+          "description": "Stores comments for each song. Ensures that each comment is associated with a song.",
+          "params": [
+            {
+              "name": "songId",
+              "description": "Unique identifier for the song that the comment is on."
+            },
+            {
+              "name": "commentId",
+              "description": "Unique identifier for the comment."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to manage music-related data, user data, and social interactions within the MuseFlow application. It prioritizes Authorization Independence using path-based ownership and structural segregation, which simplifies security rules and enhances scalability. The design focuses on making rules easily auditable and aligns with DBAC (Database-Based Access Control). \n\nAuthorization Independence is achieved by structuring data such that access control can be determined based on the document path and the `request.auth.uid`, avoiding the need for complex `get()` calls in security rules.\n\nQAPs (Rules are not Filters) are supported by structurally segregating data with different access requirements. This ensures that list operations are secure and efficient because rules can be applied directly to collections without needing to filter data based on document content.\n\nThe structure includes the following:\n- User-owned data (playlists) are stored in hierarchical paths under the `/users/{userId}` collection.\n- Music-related entities (Artists, Albums, Songs) are stored in top-level collections.\n- Social interactions (Likes, Comments) are created as subcollections of Songs, establishing a clear ownership and context. User generated content like playlists will be stored as subcollections of users."
   }
 }
