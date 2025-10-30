@@ -108,7 +108,7 @@ export default function UploadPage() {
             requestResourceData: albumData,
           });
           errorEmitter.emit('permission-error', permissionError);
-          // Re-throw to stop execution
+          // Re-throw to stop execution but be caught by the outer try-catch
           throw permissionError;
         });
 
@@ -138,7 +138,7 @@ export default function UploadPage() {
             requestResourceData: songData,
           });
           errorEmitter.emit('permission-error', permissionError);
-           // Re-throw to stop execution
+           // Re-throw to stop execution but be caught by the outer try-catch
           throw permissionError;
         });
 
@@ -150,6 +150,7 @@ export default function UploadPage() {
       router.push('/home');
     } catch (error: any) {
       console.error('Upload failed:', error);
+      // Don't show a toast for permission errors, as they are handled by the global listener
       if (!(error instanceof FirestorePermissionError)) {
           toast({
             title: 'Upload Failed',
@@ -158,6 +159,7 @@ export default function UploadPage() {
           });
       }
     } finally {
+      // This will now run even if a FirestorePermissionError is thrown
       setLoading(false);
     }
   };
