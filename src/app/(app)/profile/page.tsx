@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { PlusCircle, Music } from 'lucide-react';
+import { PlusCircle, Music, Share2, Twitter, Instagram, Globe } from 'lucide-react';
 import { doc, setDoc, collection, query, where, orderBy, limit } from 'firebase/firestore';
 import { useDoc } from '@/firebase';
 import { useMemo } from 'react';
@@ -135,6 +135,14 @@ export default function ProfilePage() {
         errorEmitter.emit('permission-error', permissionError);
     });
   };
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    toast({
+      title: 'Profile Link Copied!',
+      description: 'You can now share your profile with others.',
+    });
+  };
   
   const loading = userLoading || profileLoading;
 
@@ -166,19 +174,44 @@ export default function ProfilePage() {
       <div className="container py-6">
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-4">
-              <Avatar className="h-20 w-20">
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              <Avatar className="h-28 w-28">
                 <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? ''} />
-                <AvatarFallback>
+                <AvatarFallback className="text-4xl">
                   {user.displayName?.charAt(0) || user.email?.charAt(0)}
                 </AvatarFallback>
               </Avatar>
-              <div>
-                <CardTitle className="text-3xl">{user.displayName}</CardTitle>
-                <CardDescription>{user.email}</CardDescription>
-                {userProfile?.role === 'creator' && (
-                   <CardDescription className="font-semibold text-primary mt-1">Creator Account</CardDescription>
-                )}
+              <div className="flex-1 text-center sm:text-left">
+                <div className="flex items-center justify-center sm:justify-start gap-4">
+                  <CardTitle className="text-3xl">{user.displayName}</CardTitle>
+                  {userProfile?.role === 'creator' && (
+                     <CardDescription className="font-semibold text-primary mt-1 border border-primary px-2 py-0.5 rounded-full text-xs">CREATOR</CardDescription>
+                  )}
+                </div>
+                <CardDescription>@{userProfile?.username || user.uid}</CardDescription>
+                
+                <p className="mt-2 text-sm text-muted-foreground">{userProfile?.bio || 'No bio yet.'}</p>
+                
+                <div className="flex justify-center sm:justify-start gap-3 mt-3">
+                  {userProfile?.socials?.twitter && (
+                    <Button variant="ghost" size="icon" asChild>
+                      <a href={userProfile.socials.twitter} target="_blank" rel="noopener noreferrer"><Twitter className="h-5 w-5" /></a>
+                    </Button>
+                  )}
+                  {userProfile?.socials?.instagram && (
+                     <Button variant="ghost" size="icon" asChild>
+                      <a href={userProfile.socials.instagram} target="_blank" rel="noopener noreferrer"><Instagram className="h-5 w-5" /></a>
+                     </Button>
+                  )}
+                  {userProfile?.socials?.website && (
+                     <Button variant="ghost" size="icon" asChild>
+                      <a href={userProfile.socials.website} target="_blank" rel="noopener noreferrer"><Globe className="h-5 w-5" /></a>
+                     </Button>
+                  )}
+                   <Button variant="ghost" size="icon" onClick={handleShare}>
+                      <Share2 className="h-5 w-5" />
+                    </Button>
+                </div>
               </div>
             </div>
           </CardHeader>

@@ -9,6 +9,14 @@
           "type": "string",
           "description": "The user's name."
         },
+        "username": {
+          "type": "string",
+          "description": "The user's unique username."
+        },
+        "bio": {
+            "type": "string",
+            "description": "A short biography of the user."
+        },
         "email": {
           "type": "string",
           "description": "The user's email address."
@@ -16,6 +24,14 @@
         "avatarUrl": {
           "type": "string",
           "description": "URL of the user's avatar image."
+        },
+        "socials": {
+            "type": "object",
+            "properties": {
+                "twitter": { "type": "string" },
+                "instagram": { "type": "string" },
+                "website": { "type": "string" }
+            }
         }
       },
       "required": ["name", "email"]

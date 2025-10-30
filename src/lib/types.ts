@@ -1,9 +1,16 @@
 export type User = {
   id: string;
   name: string;
+  username?: string;
+  bio?: string;
   email: string;
   avatarUrl: string;
   role: 'user' | 'creator' | 'admin';
+  socials?: {
+    twitter?: string;
+    instagram?: string;
+    website?: string;
+  };
 };
 
 export type Artist = {
