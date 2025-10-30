@@ -1,7 +1,8 @@
+
 'use client';
 
-import { useState } from 'react';
-import { useUser, useFirestore, useCollection } from '@/firebase';
+import { useState, useMemo } from 'react';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,7 +12,6 @@ import {
 import { Music, MoreHorizontal, Settings, Twitter, Instagram, BadgeCheck } from 'lucide-react';
 import { doc, collection, query, where } from 'firebase/firestore';
 import { useDoc } from '@/firebase';
-import { useMemo } from 'react';
 import type { User, Song } from '@/lib/types';
 import { useMusicPlayer } from '@/hooks/use-music-player';
 import Image from 'next/image';
@@ -23,7 +23,7 @@ function CreatorDashboard({ user }: { user: import('firebase/auth').User }) {
   const firestore = useFirestore();
   const { play: playSong } = useMusicPlayer();
 
-  const songsQuery = useMemo(() => {
+  const songsQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(collection(firestore, 'songs'), where('artistId', '==', user.uid));
   }, [firestore, user]);
@@ -72,7 +72,7 @@ export default function ProfilePage() {
   const firestore = useFirestore();
   const [isEditOpen, setIsEditOpen] = useState(false);
 
-  const userRef = useMemo(() => {
+  const userRef = useMemoFirebase(() => {
     if (!user) return null;
     return doc(firestore, 'users', user.uid);
   }, [firestore, user]);
