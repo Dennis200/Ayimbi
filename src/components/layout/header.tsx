@@ -1,10 +1,17 @@
+'use client';
 import { UserNav } from '@/components/auth/user-nav';
+import { usePathname } from 'next/navigation';
 
 type HeaderProps = {
     title: string;
 }
 
 export function Header({ title }: HeaderProps) {
+  const pathname = usePathname();
+  // Don't render header on profile page as it has its own
+  if (pathname === '/profile') {
+    return null;
+  }
   return (
     <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 w-full border-b">
       <div className="container flex h-14 items-center">
