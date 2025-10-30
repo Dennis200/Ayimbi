@@ -11,9 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { PlusCircle, Upload } from 'lucide-react';
-import { songs } from '@/lib/data';
-import { SongCard } from '@/components/song-card';
+import { PlusCircle } from 'lucide-react';
 
 export default function ProfilePage() {
   const { user, loading } = useUser();
@@ -39,8 +37,6 @@ export default function ProfilePage() {
       </>
     );
   }
-
-  const creatorSongs = songs.filter((s) => s.artist.name === 'Stellar Waves');
 
   return (
     <>
