@@ -5,7 +5,10 @@ import type { Song } from '@/lib/types';
 import { useMusicPlayer } from '@/hooks/use-music-player';
 import { Play } from 'lucide-react';
 import { Button } from './ui/button';
-import { songs } from '@/lib/data';
+import { useCollection } from '@/firebase';
+import { useMemo } from 'react';
+import { collection, getFirestore, query } from 'firebase/firestore';
+import { useFirebaseApp } from '@/firebase';
 
 interface SongCardProps {
   song: Song;
@@ -14,16 +17,27 @@ interface SongCardProps {
 
 export function SongCard({ song, className }: SongCardProps) {
   const { play } = useMusicPlayer();
+  const app = useFirebaseApp();
+  const firestore = getFirestore(app);
+  const songsQuery = useMemo(
+    () => query(collection(firestore, 'songs')),
+    [firestore]
+  );
+  const { data: songs } = useCollection(songsQuery);
 
   const handlePlay = () => {
-    play(song, songs);
+    if (songs) {
+      play(song, songs);
+    }
   };
 
   return (
-    <div className={`group relative flex flex-col items-center space-y-3 ${className}`}>
+    <div
+      className={`group relative flex flex-col items-center space-y-3 ${className}`}
+    >
       <div className="relative aspect-square w-full overflow-hidden rounded-md">
         <Image
-          src={song.album.artworkUrl}
+          src={song.artworkUrl}
           alt={song.title}
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -39,7 +53,9 @@ export function SongCard({ song, className }: SongCardProps) {
       </div>
       <div className="w-full space-y-1 text-sm">
         <h3 className="font-medium leading-none truncate">{song.title}</h3>
-        <p className="text-xs text-muted-foreground truncate">{song.artist.name}</p>
+        <p className="text-xs text-muted-foreground truncate">
+          {song.artistName}
+        </p>
       </div>
     </div>
   );

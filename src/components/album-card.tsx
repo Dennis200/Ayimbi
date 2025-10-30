@@ -5,6 +5,10 @@ import type { Album } from '@/lib/types';
 import { Play } from 'lucide-react';
 import { Button } from './ui/button';
 import { useMusicPlayer } from '@/hooks/use-music-player';
+import { useCollection } from '@/firebase';
+import { collection, getFirestore, query, where } from 'firebase/firestore';
+import { useFirebaseApp } from '@/firebase';
+import { useMemo } from 'react';
 
 interface AlbumCardProps {
   album: Album;
@@ -12,14 +16,26 @@ interface AlbumCardProps {
 }
 
 export function AlbumCard({ album, className }: AlbumCardProps) {
-    const { play } = useMusicPlayer();
-    const handlePlay = () => {
-        if(album.songs.length > 0) {
-            play(album.songs[0], album.songs);
-        }
+  const { play } = useMusicPlayer();
+  const app = useFirebaseApp();
+  const firestore = getFirestore(app);
+
+  const songsQuery = useMemo(
+    () =>
+      query(collection(firestore, 'songs'), where('albumId', '==', album.id)),
+    [firestore, album.id]
+  );
+  const { data: songs } = useCollection(songsQuery);
+
+  const handlePlay = () => {
+    if (songs && songs.length > 0) {
+      play(songs[0], songs);
     }
+  };
   return (
-    <div className={`group relative flex flex-col items-center space-y-3 ${className}`}>
+    <div
+      className={`group relative flex flex-col items-center space-y-3 ${className}`}
+    >
       <div className="relative aspect-square w-full overflow-hidden rounded-md">
         <Image
           src={album.artworkUrl}
@@ -38,7 +54,9 @@ export function AlbumCard({ album, className }: AlbumCardProps) {
       </div>
       <div className="w-full space-y-1 text-sm">
         <h3 className="font-medium leading-none truncate">{album.title}</h3>
-        <p className="text-xs text-muted-foreground truncate">{album.artist.name}</p>
+        <p className="text-xs text-muted-foreground truncate">
+          {album.artistName}
+        </p>
       </div>
     </div>
   );

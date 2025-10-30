@@ -1,0 +1,159 @@
+{
+  "entities": {
+    "user": {
+      "title": "User",
+      "description": "A user of the application.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The user's name."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address."
+        },
+        "avatarUrl": {
+          "type": "string",
+          "description": "URL of the user's avatar image."
+        }
+      },
+      "required": ["name", "email"]
+    },
+    "artist": {
+      "title": "Artist",
+      "description": "A musical artist or band.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the artist."
+        },
+        "avatarUrl": {
+          "type": "string",
+          "description": "URL of the artist's avatar image."
+        },
+        "bio": {
+          "type": "string",
+          "description": "A short biography of the artist."
+        }
+      },
+      "required": ["name"]
+    },
+    "album": {
+      "title": "Album",
+      "description": "A music album or EP.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The title of the album."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["album", "ep"],
+          "description": "The type of release."
+        },
+        "artistId": {
+          "type": "string",
+          "description": "The ID of the artist."
+        },
+        "artistName": {
+            "type": "string",
+            "description": "The name of the artist."
+        },
+        "artworkUrl": {
+          "type": "string",
+          "description": "URL of the album's artwork."
+        },
+        "releaseDate": {
+          "type": "string",
+          "format": "date",
+          "description": "The release date of the album."
+        }
+      },
+      "required": ["title", "type", "artistId", "artistName", "releaseDate"]
+    },
+    "song": {
+      "title": "Song",
+      "description": "A single song or track.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The title of the song."
+        },
+        "duration": {
+          "type": "number",
+          "description": "Duration of the song in seconds."
+        },
+        "artistId": {
+          "type": "string",
+          "description": "The ID of the artist."
+        },
+        "artistName": {
+            "type": "string",
+            "description": "The name of the artist."
+        },
+        "albumId": {
+          "type": "string",
+          "description": "The ID of the album this song belongs to."
+        },
+        "albumTitle": {
+            "type": "string",
+            "description": "The title of the album."
+        },
+        "artworkUrl": {
+            "type": "string",
+            "description": "The URL for the song's artwork."
+        },
+        "audioUrl": {
+          "type": "string",
+          "description": "URL of the audio file for the song."
+        },
+        "likes": {
+          "type": "number",
+          "description": "Number of likes the song has received."
+        },
+        "shares": {
+          "type": "number",
+          "description": "Number of times the song has been shared."
+        },
+        "lyrics": {
+          "type": "string",
+          "description": "The lyrics of the song."
+        }
+      },
+      "required": ["title", "duration", "artistId", "artistName", "albumId", "albumTitle", "audioUrl"]
+    }
+  },
+  "auth": {
+    "providers": ["google.com", "password"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/user"
+      },
+      "description": "Stores public profiles for users."
+    },
+    "/artists/{artistId}": {
+      "schema": {
+        "$ref": "#/entities/artist"
+      },
+      "description": "Stores information about music artists."
+    },
+    "/albums/{albumId}": {
+      "schema": {
+        "$ref": "#/entities/album"
+      },
+      "description": "Stores album and EP details."
+    },
+    "/songs/{songId}": {
+      "schema": {
+        "$ref": "#/entities/song"
+      },
+      "description": "Stores individual song details."
+    }
+  }
+}

@@ -1,7 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '@/hooks/use-auth';
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from 'firebase/auth';
+import { useFirebaseApp } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -15,28 +22,64 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
-import type { User } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
-export function AuthDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
-  const { login, loading } = useAuth();
+export function AuthDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const app = useFirebaseApp();
+  const auth = getAuth(app);
+  const { toast } = useToast();
+
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (role: User['role']) => {
-    login(email, role);
-    if (!loading) {
+  const handleAuthError = (error: any) => {
+    setLoading(false);
+    console.error(error);
+    toast({
+      title: 'Authentication Error',
+      description: error.message,
+      variant: 'destructive',
+    });
+  };
+
+  const handleLogin = async () => {
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
       onOpenChange(false);
+    } catch (error) {
+      handleAuthError(error);
     }
   };
 
-  const handleSignup = () => {
-    // In a real app, this would be a signup API call.
-    // We'll just log in as a new 'user'.
-    login(email, 'user');
-    if (!loading) {
+  const handleSignup = async () => {
+    setLoading(true);
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
       onOpenChange(false);
+    } catch (error) {
+      handleAuthError(error);
     }
-  }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      onOpenChange(false);
+    } catch (error) {
+      handleAuthError(error);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -65,6 +108,7 @@ export function AuthDialog({ open, onOpenChange }: { open: boolean, onOpenChange
                   className="col-span-3"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -74,23 +118,60 @@ export function AuthDialog({ open, onOpenChange }: { open: boolean, onOpenChange
                 <Input
                   id="password-login"
                   type="password"
-                  defaultValue="123456"
                   className="col-span-3"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
                 />
               </div>
             </div>
-            <DialogFooter>
-              <Button type="submit" className="w-full" onClick={() => handleLogin('user')} disabled={loading}>
-                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Login as User'}
+            <DialogFooter className="flex flex-col gap-2">
+              <Button
+                type="submit"
+                className="w-full"
+                onClick={handleLogin}
+                disabled={loading}
+              >
+                {loading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  'Login'
+                )}
               </Button>
-               <Button variant="secondary" type="submit" className="w-full" onClick={() => handleLogin('creator')} disabled={loading}>
-                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Login as Creator'}
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={handleGoogleSignIn}
+                disabled={loading}
+              >
+                {loading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <svg
+                      className="mr-2 h-4 w-4"
+                      aria-hidden="true"
+                      focusable="false"
+                      data-prefix="fab"
+                      data-icon="google"
+                      role="img"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 488 512"
+                    >
+                      <path
+                        fill="currentColor"
+                        d="M488 261.8C488 403.3 381.5 512 244 512 109.8 512 0 402.2 0 261.8S109.8 11.6 244 11.6c70.3 0 129.5 27.8 174.9 73.6l-65.3 64.2c-28.4-26.8-68.9-44.5-109.6-44.5-83.3 0-151.5 68.1-151.5 151.9s68.1 151.9 151.5 151.9c98.3 0 130.4-67.4 134.8-103.3H244V261.8h244z"
+                      ></path>
+                    </svg>
+                    Sign in with Google
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </TabsContent>
           <TabsContent value="signup">
             <div className="grid gap-4 py-4">
-               <div className="grid grid-cols-4 items-center gap-4">
+              <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="name-signup" className="text-right">
                   Name
                 </Label>
@@ -100,6 +181,7 @@ export function AuthDialog({ open, onOpenChange }: { open: boolean, onOpenChange
                   className="col-span-3"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  autoComplete="name"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -111,8 +193,9 @@ export function AuthDialog({ open, onOpenChange }: { open: boolean, onOpenChange
                   type="email"
                   placeholder="user@example.com"
                   className="col-span-3"
-                   value={email}
+                  value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -123,12 +206,24 @@ export function AuthDialog({ open, onOpenChange }: { open: boolean, onOpenChange
                   id="password-signup"
                   type="password"
                   className="col-span-3"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="new-password"
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit" className="w-full" onClick={handleSignup} disabled={loading}>
-                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Create Account'}
+              <Button
+                type="submit"
+                className="w-full"
+                onClick={handleSignup}
+                disabled={loading}
+              >
+                {loading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  'Create Account'
+                )}
               </Button>
             </DialogFooter>
           </TabsContent>
