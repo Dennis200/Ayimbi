@@ -17,6 +17,11 @@ import {
   Volume1,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useFirestore } from '@/firebase';
+import { doc, increment, updateDoc } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { useToast } from '@/hooks/use-toast';
 
 export function MusicPlayer() {
   const {
@@ -33,10 +38,63 @@ export function MusicPlayer() {
     toggleMute,
     seek,
   } = useMusicPlayer();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+
 
   if (!currentSong) {
     return null;
   }
+
+  const handleDownload = async () => {
+    if (!currentSong) return;
+
+    // Increment download count in Firestore
+    const songRef = doc(firestore, 'songs', currentSong.id);
+    updateDoc(songRef, {
+      downloadCount: increment(1),
+    }).catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: songRef.path,
+          operation: 'update',
+          requestResourceData: { downloadCount: 'increment' },
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    });
+
+    // Initiate download
+    try {
+        const response = await fetch(currentSong.audioUrl);
+        if (!response.ok) throw new Error('Network response was not ok.');
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+
+        // Try to get a nice filename
+        const fileName = currentSong.audioUrl.split('/').pop() || `${currentSong.title}.mp3`;
+        a.download = fileName;
+        
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        toast({
+            title: "Downloading...",
+            description: `"${currentSong.title}" has started downloading.`
+        });
+
+    } catch (error) {
+        console.error("Download failed:", error);
+        toast({
+            title: "Download Failed",
+            description: "Could not download the song. Please try again.",
+            variant: "destructive",
+        })
+    }
+  };
 
   const formatTime = (time: number) => {
     if (isNaN(time)) return '0:00';
@@ -139,7 +197,7 @@ export function MusicPlayer() {
 
         {/* Volume & Actions */}
         <div className="flex items-center justify-end gap-3">
-          <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleDownload}>
             <Download className="h-4 w-4" />
           </Button>
           <div className="flex items-center w-32 gap-2">
