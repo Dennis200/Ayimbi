@@ -33,6 +33,7 @@ export type Song = {
   audioUrl: string;
   likes: number;
   shares: number;
+  downloadCount: number;
   lyrics?: string;
   genre?: string;
 };

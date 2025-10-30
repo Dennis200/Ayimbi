@@ -44,8 +44,8 @@ const formSchema = z.object({
   songTitle: z.string().min(1, 'Song title is required'),
   albumTitle: z.string().min(1, 'Album title is required'),
   genre: z.string().min(1, 'Genre is required'),
-  audioFile: z.instanceof(File).refine((file) => file.size > 0, 'Audio file is required'),
-  artworkFile: z.instanceof(File).refine((file) => file.size > 0, 'Artwork file is required'),
+  audioFile: z.instanceof(File).refine((file) => file.size > 0, 'Audio file is required').refine(file => file.type.startsWith('audio/'), 'File must be an audio type.'),
+  artworkFile: z.instanceof(File).refine((file) => file.size > 0, 'Artwork file is required').refine(file => file.type.startsWith('image/'), 'File must be an image type.'),
 });
 
 type UploadFormValues = z.infer<typeof formSchema>;
@@ -83,11 +83,12 @@ export default function UploadPage() {
       const audioPath = `uploads/music/${user.uid}/${Date.now()}_${data.audioFile.name}`;
       const artworkPath = `uploads/artwork/${user.uid}/${Date.now()}_${data.artworkFile.name}`;
 
-      const audioUrl = await uploadFile(audioPath, data.audioFile);
-      const artworkUrl = await uploadFile(artworkPath, data.artworkFile);
-
-      // 2. Create album if it doesn't exist (simple check by title for this example)
-      // In a real app, you'd likely want a more robust way to handle this.
+      const [audioUrl, artworkUrl] = await Promise.all([
+        uploadFile(audioPath, data.audioFile),
+        uploadFile(artworkPath, data.artworkFile)
+      ]);
+      
+      // 2. Create album document in Firestore
       const albumRef = doc(collection(firestore, 'albums'));
       const albumData = {
           id: albumRef.id,
@@ -99,7 +100,7 @@ export default function UploadPage() {
           type: 'album' as const,
       };
       
-      const setAlbumDoc = setDoc(albumRef, albumData)
+      await setDoc(albumRef, albumData)
         .catch(async (serverError) => {
           const permissionError = new FirestorePermissionError({
             path: albumRef.path,
@@ -107,6 +108,7 @@ export default function UploadPage() {
             requestResourceData: albumData,
           });
           errorEmitter.emit('permission-error', permissionError);
+          // Re-throw to stop execution
           throw permissionError;
         });
 
@@ -115,7 +117,7 @@ export default function UploadPage() {
       const songData = {
         title: data.songTitle,
         genre: data.genre,
-        duration: 0, // Placeholder, can be extracted from audio metadata
+        duration: 0, // Placeholder, can be extracted from audio metadata client-side
         artistId: user.uid,
         artistName: user.displayName || 'Unknown Artist',
         albumId: albumRef.id,
@@ -124,10 +126,11 @@ export default function UploadPage() {
         audioUrl,
         likes: 0,
         shares: 0,
+        downloadCount: 0,
         createdAt: serverTimestamp(),
       };
 
-      const addSongDoc = addDoc(songCollection, songData)
+      await addDoc(songCollection, songData)
         .catch(async (serverError) => {
           const permissionError = new FirestorePermissionError({
             path: songCollection.path,
@@ -135,11 +138,9 @@ export default function UploadPage() {
             requestResourceData: songData,
           });
           errorEmitter.emit('permission-error', permissionError);
+           // Re-throw to stop execution
           throw permissionError;
         });
-        
-      await Promise.all([setAlbumDoc, addSongDoc]);
-
 
       toast({
         title: 'Upload Successful',
@@ -244,7 +245,7 @@ export default function UploadPage() {
                   <FormControl>
                     <Input
                       type="file"
-                      accept="image/*"
+                      accept="image/png, image/jpeg, image/jpg"
                       onChange={(e) => {
                         onChange(e.target.files ? e.target.files[0] : null);
                       }}

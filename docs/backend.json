@@ -149,6 +149,10 @@
           "type": "number",
           "description": "Number of times the song has been shared."
         },
+        "downloadCount": {
+          "type": "number",
+          "description": "Number of times the song has been downloaded."
+        },
         "lyrics": {
           "type": "string",
           "description": "The lyrics of the song."
