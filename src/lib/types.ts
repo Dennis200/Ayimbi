@@ -26,6 +26,7 @@ export type Song = {
   likes: number;
   shares: number;
   lyrics?: string;
+  genre?: string;
 };
 
 export type Album = {
@@ -53,3 +54,8 @@ export type ImagePlaceholder = {
   imageUrl: string;
   imageHint: string;
 };
+
+export type RecentlyPlayed = {
+  song: Song;
+  playedAt: Date;
+}

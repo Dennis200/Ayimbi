@@ -83,6 +83,11 @@
           "type": "string",
           "description": "The title of the song."
         },
+        "genre": {
+            "type": "string",
+            "description": "The genre of the song.",
+            "enum": ["Electronic", "Acoustic", "Rock", "Pop", "Hip-Hop", "Jazz", "Classical"]
+        },
         "duration": {
           "type": "number",
           "description": "Duration of the song in seconds."

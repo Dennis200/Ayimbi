@@ -16,8 +16,16 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -30,9 +38,12 @@ import { useRouter } from 'next/navigation';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
+const genres = ["Electronic", "Acoustic", "Rock", "Pop", "Hip-Hop", "Jazz", "Classical"];
+
 const formSchema = z.object({
   songTitle: z.string().min(1, 'Song title is required'),
   albumTitle: z.string().min(1, 'Album title is required'),
+  genre: z.string().min(1, 'Genre is required'),
   audioFile: z.instanceof(File).refine((file) => file.size > 0, 'Audio file is required'),
   artworkFile: z.instanceof(File).refine((file) => file.size > 0, 'Artwork file is required'),
 });
@@ -52,6 +63,7 @@ export default function UploadPage() {
     defaultValues: {
       songTitle: '',
       albumTitle: '',
+      genre: '',
     },
   });
 
@@ -102,6 +114,7 @@ export default function UploadPage() {
       const songCollection = collection(firestore, 'songs');
       const songData = {
         title: data.songTitle,
+        genre: data.genre,
         duration: 0, // Placeholder, can be extracted from audio metadata
         artistId: user.uid,
         artistName: user.displayName || 'Unknown Artist',
@@ -176,6 +189,28 @@ export default function UploadPage() {
                   <FormControl>
                     <Input placeholder="Best Of Me" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="genre"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Genre</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a genre" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {genres.map(genre => (
+                        <SelectItem key={genre} value={genre}>{genre}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

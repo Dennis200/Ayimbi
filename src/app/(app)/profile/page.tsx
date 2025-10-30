@@ -1,6 +1,6 @@
 'use client';
 
-import { useUser, useFirestore } from '@/firebase';
+import { useUser, useFirestore, useCollection } from '@/firebase';
 import { Header } from '@/components/layout/header';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -11,14 +11,99 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { PlusCircle } from 'lucide-react';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { PlusCircle, Music } from 'lucide-react';
+import { doc, setDoc, collection, query, where, orderBy, limit } from 'firebase/firestore';
 import { useDoc } from '@/firebase';
 import { useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import type { User } from '@/lib/types';
+import type { User, Song } from '@/lib/types';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { useMusicPlayer } from '@/hooks/use-music-player';
+import Image from 'next/image';
+
+function CreatorDashboard({ user }: { user: import('firebase/auth').User }) {
+  const firestore = useFirestore();
+  const { play: playSong, currentSong: activeSong, isPlaying } = useMusicPlayer();
+
+  const songsQuery = useMemo(() => {
+    if (!user) return null;
+    return query(collection(firestore, 'songs'), where('artistId', '==', user.uid));
+  }, [firestore, user]);
+
+  const { data: uploadedSongs, loading } = useCollection<Song>(songsQuery);
+  
+  const handlePlay = (song: Song) => {
+    if (uploadedSongs) {
+        playSong(song, uploadedSongs);
+    }
+  }
+
+  if (loading) return <p>Loading your songs...</p>;
+
+  return (
+    <div className="mt-8">
+      <h2 className="text-2xl font-semibold tracking-tight mb-4">Your Uploads</h2>
+      {uploadedSongs && uploadedSongs.length > 0 ? (
+        <div className="space-y-4">
+          {uploadedSongs.map((song) => (
+            <div key={song.id} className="flex items-center gap-4 p-2 rounded-md hover:bg-secondary">
+              <Image src={song.artworkUrl} alt={song.title} width={48} height={48} className="rounded-md" />
+              <div className="flex-1">
+                <p className="font-medium">{song.title}</p>
+                <p className="text-sm text-muted-foreground">{song.albumTitle}</p>
+              </div>
+              <p className="text-sm text-muted-foreground">{song.genre}</p>
+              <Button variant="ghost" size="icon" onClick={() => handlePlay(song)}>
+                <Music className="h-5 w-5" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-10 border-dashed border-2 rounded-lg">
+          <p className="text-muted-foreground">You haven't uploaded any music yet.</p>
+          <Button variant="link" asChild>
+            <a href="/upload">Upload your first track</a>
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+function UserDashboard() {
+  const { recentlyPlayed, play: playSong } = useMusicPlayer();
+
+  const handlePlay = (song: Song) => {
+    playSong(song, recentlyPlayed.map(p => p.song));
+  }
+
+  return (
+    <div className="mt-8">
+      <h2 className="text-2xl font-semibold tracking-tight mb-4">Recently Played</h2>
+      {recentlyPlayed && recentlyPlayed.length > 0 ? (
+        <div className="space-y-4">
+          {recentlyPlayed.map(({ song }) => (
+             <div key={song.id} className="flex items-center gap-4 p-2 rounded-md hover:bg-secondary">
+             <Image src={song.artworkUrl} alt={song.title} width={48} height={48} className="rounded-md" />
+             <div className="flex-1">
+               <p className="font-medium">{song.title}</p>
+               <p className="text-sm text-muted-foreground">{song.artistName}</p>
+             </div>
+             <Button variant="ghost" size="icon" onClick={() => handlePlay(song)}>
+                <Music className="h-5 w-5" />
+              </Button>
+           </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-muted-foreground">No recently played songs.</p>
+      )}
+    </div>
+  );
+}
 
 export default function ProfilePage() {
   const { user, loading: userLoading } = useUser();
@@ -32,22 +117,23 @@ export default function ProfilePage() {
 
   const { data: userProfile, loading: profileLoading } = useDoc<User>(userRef);
 
-  const handleBecomeCreator = async () => {
+  const handleBecomeCreator = () => {
     if (!userRef) return;
-    try {
-      await setDoc(userRef, { role: 'creator' }, { merge: true });
-      toast({
-        title: 'Congratulations!',
-        description: "You are now a creator. You can start uploading music.",
-      });
-    } catch (e: any) {
+    setDoc(userRef, { role: 'creator' }, { merge: true })
+      .then(() => {
+         toast({
+          title: 'Congratulations!',
+          description: "You are now a creator. You can start uploading music.",
+        });
+      })
+      .catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
           path: userRef.path,
           operation: 'update',
           requestResourceData: { role: 'creator' },
         });
         errorEmitter.emit('permission-error', permissionError);
-    }
+    });
   };
   
   const loading = userLoading || profileLoading;
@@ -90,25 +176,27 @@ export default function ProfilePage() {
               <div>
                 <CardTitle className="text-3xl">{user.displayName}</CardTitle>
                 <CardDescription>{user.email}</CardDescription>
+                {userProfile?.role === 'creator' && (
+                   <CardDescription className="font-semibold text-primary mt-1">Creator Account</CardDescription>
+                )}
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            {userProfile?.role !== 'creator' && (
-              <div className="text-center py-10">
-                <p className="text-muted-foreground mb-4">
-                  Want to share your music with the world?
-                </p>
-                <Button onClick={handleBecomeCreator}>
-                  <PlusCircle className="mr-2 h-4 w-4" /> Become a Creator
-                </Button>
-              </div>
-            )}
-             {userProfile?.role === 'creator' && (
-                <div className="text-center py-10">
-                    <p className="text-lg font-semibold">You are a Creator!</p>
-                    <p className="text-muted-foreground mt-2">Start uploading and sharing your music with the world.</p>
+            {userProfile?.role === 'creator' ? (
+                <CreatorDashboard user={user} />
+            ) : (
+              <>
+                <UserDashboard />
+                <div className="text-center py-10 mt-8 border-t">
+                  <p className="text-muted-foreground mb-4">
+                    Want to share your music with the world?
+                  </p>
+                  <Button onClick={handleBecomeCreator}>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Become a Creator
+                  </Button>
                 </div>
+              </>
             )}
           </CardContent>
         </Card>
