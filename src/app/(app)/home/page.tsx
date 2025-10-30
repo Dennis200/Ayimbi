@@ -1,10 +1,9 @@
 'use client';
 import { Header } from '@/components/layout/header';
-import { useCollection } from '@/firebase';
+import { useCollection, useMemoFirebase } from '@/firebase';
 import type { Song, Album } from '@/lib/types';
 import { SongCard } from '@/components/song-card';
 import { AlbumCard } from '@/components/album-card';
-import { useMemo } from 'react';
 import { collection, getFirestore, limit, query } from 'firebase/firestore';
 import { useFirebaseApp } from '@/firebase';
 
@@ -12,7 +11,7 @@ export default function HomePage() {
   const app = useFirebaseApp();
   const firestore = getFirestore(app);
 
-  const songsQuery = useMemo(
+  const songsQuery = useMemoFirebase(
     () => query(collection(firestore, 'songs'), limit(5)),
     [firestore]
   );
@@ -20,7 +19,7 @@ export default function HomePage() {
     songsQuery
   );
 
-  const albumsQuery = useMemo(
+  const albumsQuery = useMemoFirebase(
     () => query(collection(firestore, 'albums'), limit(6)),
     [firestore]
   );
