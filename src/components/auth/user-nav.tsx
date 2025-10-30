@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   getAuth,
 } from 'firebase/auth';
-import { useUser, useFirebaseApp } from '@/firebase';
+import { useUser, useFirebaseApp, useFirestore, useDoc } from '@/firebase';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,20 +24,32 @@ import {
   PlusCircle,
   Settings,
   User as UserIcon,
-  Loader2
+  Loader2,
+  Upload
 } from 'lucide-react';
+import { doc } from 'firebase/firestore';
+import type { User } from '@/lib/types';
+
 
 export function UserNav() {
   const app = useFirebaseApp();
   const auth = getAuth(app);
-  const { user, loading } = useUser();
+  const firestore = useFirestore();
+  const { user, loading: userLoading } = useUser();
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
+
+  const userRef = useMemo(() => {
+    if (!user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+
+  const { data: userProfile, loading: profileLoading } = useDoc<User>(userRef);
 
   const handleLogout = async () => {
     await auth.signOut();
   };
   
-  if (loading) {
+  if (userLoading || profileLoading) {
     return <Loader2 className="h-6 w-6 animate-spin" />;
   }
 
@@ -81,11 +93,12 @@ export function UserNav() {
               <Settings className="mr-2 h-4 w-4" />
               <span>Settings</span>
             </DropdownMenuItem>
-            {/* Placeholder for custom claims role check */}
-            {true && (
-              <DropdownMenuItem>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                <span>Upload Music</span>
+            {userProfile?.role === 'creator' && (
+              <DropdownMenuItem asChild>
+                <Link href="/upload">
+                  <Upload className="mr-2 h-4 w-4" />
+                  <span>Upload Music</span>
+                </Link>
               </DropdownMenuItem>
             )}
           </DropdownMenuGroup>

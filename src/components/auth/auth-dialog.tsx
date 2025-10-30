@@ -7,8 +7,9 @@ import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
+  updateProfile,
 } from 'firebase/auth';
-import { useFirebaseApp } from '@/firebase';
+import { useFirebaseApp, useFirestore } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -23,6 +24,9 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { doc, setDoc } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export function AuthDialog({
   open,
@@ -33,6 +37,7 @@ export function AuthDialog({
 }) {
   const app = useFirebaseApp();
   const auth = getAuth(app);
+  const firestore = useFirestore();
   const { toast } = useToast();
 
   const [email, setEmail] = useState('');
@@ -49,6 +54,25 @@ export function AuthDialog({
       variant: 'destructive',
     });
   };
+  
+  const createUserProfileDocument = (user: any) => {
+    const userRef = doc(firestore, 'users', user.uid);
+    const userData = {
+        name: name || user.displayName,
+        email: user.email,
+        avatarUrl: user.photoURL,
+        role: 'user',
+    };
+    setDoc(userRef, userData, { merge: true })
+      .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: userRef.path,
+          operation: 'create',
+          requestResourceData: userData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
+  }
 
   const handleLogin = async () => {
     setLoading(true);
@@ -57,16 +81,25 @@ export function AuthDialog({
       onOpenChange(false);
     } catch (error) {
       handleAuthError(error);
+    } finally {
+        setLoading(false);
     }
   };
 
   const handleSignup = async () => {
     setLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(userCredential.user, { displayName: name });
+      
+      // Create user profile in Firestore
+      createUserProfileDocument(userCredential.user);
+
       onOpenChange(false);
     } catch (error) {
       handleAuthError(error);
+    } finally {
+        setLoading(false);
     }
   };
 
@@ -74,10 +107,14 @@ export function AuthDialog({
     setLoading(true);
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      // Create user profile in Firestore
+      createUserProfileDocument(result.user);
       onOpenChange(false);
     } catch (error) {
       handleAuthError(error);
+    } finally {
+        setLoading(false);
     }
   };
 
