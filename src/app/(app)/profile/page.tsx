@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -8,11 +9,8 @@ import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
-import { PlusCircle, Music, Share2, Twitter, Instagram, Globe, Edit } from 'lucide-react';
+import { PlusCircle, Music, Share2, Twitter, Instagram, Globe, Edit, ListMusic } from 'lucide-react';
 import { doc, setDoc, collection, query, where } from 'firebase/firestore';
 import { useDoc } from '@/firebase';
 import { useMemo } from 'react';
@@ -23,6 +21,7 @@ import { FirestorePermissionError } from '@/firebase/errors';
 import { useMusicPlayer } from '@/hooks/use-music-player';
 import Image from 'next/image';
 import { EditProfileDialog } from '@/components/auth/edit-profile-dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 function CreatorDashboard({ user }: { user: import('firebase/auth').User }) {
   const firestore = useFirestore();
@@ -41,31 +40,32 @@ function CreatorDashboard({ user }: { user: import('firebase/auth').User }) {
     }
   }
 
-  if (loading) return <p>Loading your songs...</p>;
+  if (loading) return <p className="text-center p-10">Loading your songs...</p>;
 
   return (
-    <div className="mt-8">
-      <h2 className="text-2xl font-semibold tracking-tight mb-4">Your Uploads</h2>
+    <div className="mt-6">
       {uploadedSongs && uploadedSongs.length > 0 ? (
-        <div className="space-y-4">
+        <div className="space-y-2">
           {uploadedSongs.map((song) => (
-            <div key={song.id} className="flex items-center gap-4 p-2 rounded-md hover:bg-secondary">
-              <Image src={song.artworkUrl} alt={song.title} width={48} height={48} className="rounded-md" />
+            <div key={song.id} className="flex items-center gap-4 p-2 rounded-md hover:bg-secondary transition-colors">
+              <Image src={song.artworkUrl} alt={song.title} width={40} height={40} className="rounded-sm" />
               <div className="flex-1">
-                <p className="font-medium">{song.title}</p>
-                <p className="text-sm text-muted-foreground">{song.albumTitle}</p>
+                <p className="font-medium text-sm">{song.title}</p>
+                <p className="text-xs text-muted-foreground">{song.albumTitle}</p>
               </div>
-              <p className="text-sm text-muted-foreground">{song.genre}</p>
-              <Button variant="ghost" size="icon" onClick={() => handlePlay(song)}>
-                <Music className="h-5 w-5" />
+              <p className="text-xs text-muted-foreground hidden sm:block">{song.genre}</p>
+              <Button variant="ghost" size="icon" onClick={() => handlePlay(song)} className="h-8 w-8">
+                <Music className="h-4 w-4" />
               </Button>
             </div>
           ))}
         </div>
       ) : (
-        <div className="text-center py-10 border-dashed border-2 rounded-lg">
-          <p className="text-muted-foreground">You haven't uploaded any music yet.</p>
-          <Button variant="link" asChild>
+        <div className="text-center py-16 border-dashed border-2 rounded-lg mt-6">
+          <ListMusic className="mx-auto h-12 w-12 text-muted-foreground" />
+          <h3 className="mt-4 text-lg font-medium">No uploads yet</h3>
+          <p className="text-muted-foreground mt-1 text-sm">You haven't uploaded any music.</p>
+          <Button variant="link" asChild className="mt-2">
             <a href="/upload">Upload your first track</a>
           </Button>
         </div>
@@ -81,28 +81,33 @@ function UserDashboard() {
   const handlePlay = (song: Song) => {
     playSong(song, recentlyPlayed.map(p => p.song));
   }
+  
+  if (recentlyPlayed.length === 0) {
+      return (
+        <div className="text-center py-16 border-dashed border-2 rounded-lg mt-6">
+            <Music className="mx-auto h-12 w-12 text-muted-foreground" />
+            <h3 className="mt-4 text-lg font-medium">No recent activity</h3>
+            <p className="text-muted-foreground mt-1 text-sm">Songs you play will appear here.</p>
+        </div>
+      )
+  }
 
   return (
-    <div className="mt-8">
-      <h2 className="text-2xl font-semibold tracking-tight mb-4">Recently Played</h2>
-      {recentlyPlayed && recentlyPlayed.length > 0 ? (
-        <div className="space-y-4">
-          {recentlyPlayed.map(({ song }) => (
-             <div key={song.id} className="flex items-center gap-4 p-2 rounded-md hover:bg-secondary">
-             <Image src={song.artworkUrl} alt={song.title} width={48} height={48} className="rounded-md" />
-             <div className="flex-1">
-               <p className="font-medium">{song.title}</p>
-               <p className="text-sm text-muted-foreground">{song.artistName}</p>
-             </div>
-             <Button variant="ghost" size="icon" onClick={() => handlePlay(song)}>
-                <Music className="h-5 w-5" />
-              </Button>
-           </div>
-          ))}
-        </div>
-      ) : (
-        <p className="text-muted-foreground">No recently played songs.</p>
-      )}
+    <div className="mt-6">
+      <div className="space-y-2">
+        {recentlyPlayed.map(({ song }) => (
+            <div key={song.id} className="flex items-center gap-4 p-2 rounded-md hover:bg-secondary transition-colors">
+            <Image src={song.artworkUrl} alt={song.title} width={40} height={40} className="rounded-sm" />
+            <div className="flex-1">
+                <p className="font-medium text-sm">{song.title}</p>
+                <p className="text-xs text-muted-foreground">{song.artistName}</p>
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => handlePlay(song)} className="h-8 w-8">
+                <Music className="h-4 w-4" />
+            </Button>
+            </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -154,7 +159,7 @@ export default function ProfilePage() {
       <>
         <Header title="Profile" />
         <div className="container flex items-center justify-center py-6">
-          <p>Loading...</p>
+          <p>Loading profile...</p>
         </div>
       </>
     );
@@ -174,72 +179,95 @@ export default function ProfilePage() {
   return (
     <>
       <Header title="Profile" />
-      <div className="container py-6">
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col sm:flex-row items-center gap-6">
-              <Avatar className="h-28 w-28">
-                <AvatarImage src={userProfile?.avatarUrl ?? user.photoURL ?? ''} alt={userProfile?.name ?? ''} />
-                <AvatarFallback className="text-4xl">
-                  {userProfile?.name?.charAt(0) || user.displayName?.charAt(0) || user.email?.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 text-center sm:text-left">
-                <div className="flex items-center justify-center sm:justify-start gap-4">
-                  <CardTitle className="text-3xl">{userProfile?.name || user.displayName}</CardTitle>
-                  {userProfile?.role === 'creator' && (
-                     <CardDescription className="font-semibold text-primary mt-1 border border-primary px-2 py-0.5 rounded-full text-xs">CREATOR</CardDescription>
-                  )}
-                </div>
-                <CardDescription>@{userProfile?.username || user.uid}</CardDescription>
-                
-                <p className="mt-2 text-sm text-muted-foreground">{userProfile?.bio || 'No bio yet. Click edit to add one!'}</p>
-                
-                <div className="flex justify-center sm:justify-start gap-3 mt-3">
-                   {userProfile?.socials?.twitter && (
-                    <Button variant="ghost" size="icon" asChild>
-                      <a href={userProfile.socials.twitter} target="_blank" rel="noopener noreferrer"><Twitter className="h-5 w-5" /></a>
-                    </Button>
-                  )}
-                  {userProfile?.socials?.instagram && (
-                     <Button variant="ghost" size="icon" asChild>
-                      <a href={userProfile.socials.instagram} target="_blank" rel="noopener noreferrer"><Instagram className="h-5 w-5" /></a>
-                     </Button>
-                  )}
-                  {userProfile?.socials?.website && (
-                     <Button variant="ghost" size="icon" asChild>
-                      <a href={userProfile.socials.website} target="_blank" rel="noopener noreferrer"><Globe className="h-5 w-5" /></a>
-                     </Button>
-                  )}
-                   <Button variant="ghost" size="icon" onClick={handleShare}>
-                      <Share2 className="h-5 w-5" />
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => setIsEditOpen(true)}>
-                      <Edit className="mr-2 h-4 w-4" />
-                      Edit Profile
-                    </Button>
-                </div>
-              </div>
+      <div className="container py-6 space-y-6">
+        <Card className="overflow-hidden">
+            <div className="relative h-40 md:h-52 bg-secondary">
+                {userProfile?.coverPhotoUrl ? (
+                    <Image src={userProfile.coverPhotoUrl} alt="Cover photo" fill className="object-cover" />
+                ) : (
+                    <div className="bg-gradient-to-r from-blue-400 to-purple-500 h-full w-full"></div>
+                )}
             </div>
-          </CardHeader>
-          <CardContent>
-            {userProfile?.role === 'creator' ? (
-                <CreatorDashboard user={user} />
-            ) : (
-              <>
-                <UserDashboard />
-                <div className="text-center py-10 mt-8 border-t">
-                  <p className="text-muted-foreground mb-4">
-                    Want to share your music with the world?
-                  </p>
-                  <Button onClick={handleBecomeCreator}>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Become a Creator
-                  </Button>
+            <div className="p-6 pt-0 -mt-16 sm:-mt-20 flex flex-col sm:flex-row items-center gap-6">
+                <Avatar className="h-32 w-32 sm:h-40 sm:w-40 border-4 border-background shrink-0">
+                    <AvatarImage src={userProfile?.avatarUrl ?? user.photoURL ?? ''} alt={userProfile?.name ?? ''} />
+                    <AvatarFallback className="text-6xl">
+                    {userProfile?.name?.charAt(0) || user.displayName?.charAt(0) || user.email?.charAt(0)}
+                    </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 text-center sm:text-left mt-4 sm:mt-16 w-full">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                             <div className="flex items-center justify-center sm:justify-start gap-3">
+                                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{userProfile?.name || user.displayName}</h1>
+                                {userProfile?.role === 'creator' && (
+                                    <span className="font-semibold text-primary mt-1 border border-primary px-2 py-0.5 rounded-full text-xs uppercase tracking-wider">CREATOR</span>
+                                )}
+                            </div>
+                            <p className="text-muted-foreground text-sm">@{userProfile?.username || user.uid}</p>
+                        </div>
+                        <div className="flex items-center justify-center sm:justify-end gap-2 shrink-0">
+                           <Button variant="ghost" size="icon" onClick={handleShare}>
+                                <Share2 className="h-4 w-4" />
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => setIsEditOpen(true)}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit Profile
+                            </Button>
+                        </div>
+                    </div>
+                    <p className="mt-3 text-sm text-muted-foreground max-w-lg mx-auto sm:mx-0">{userProfile?.bio || 'No bio yet. Click edit to add one!'}</p>
+                    <div className="flex justify-center sm:justify-start gap-1 mt-3">
+                        {userProfile?.socials?.twitter && (
+                            <Button variant="ghost" size="sm" asChild>
+                            <a href={userProfile.socials.twitter} target="_blank" rel="noopener noreferrer"><Twitter className="h-4 w-4 mr-2" /> Twitter</a>
+                            </Button>
+                        )}
+                        {userProfile?.socials?.instagram && (
+                            <Button variant="ghost" size="sm" asChild>
+                            <a href={userProfile.socials.instagram} target="_blank" rel="noopener noreferrer"><Instagram className="h-4 w-4 mr-2" /> Instagram</a>
+                            </Button>
+                        )}
+                        {userProfile?.socials?.website && (
+                            <Button variant="ghost" size="sm" asChild>
+                            <a href={userProfile.socials.website} target="_blank" rel="noopener noreferrer"><Globe className="h-4 w-4 mr-2" /> Website</a>
+                            </Button>
+                        )}
+                    </div>
                 </div>
-              </>
-            )}
-          </CardContent>
+            </div>
         </Card>
+        
+        {userProfile?.role === 'creator' ? (
+            <Tabs defaultValue="uploads" className="w-full">
+                <TabsList>
+                    <TabsTrigger value="uploads">Uploads</TabsTrigger>
+                    <TabsTrigger value="activity">Recent Activity</TabsTrigger>
+                </TabsList>
+                <TabsContent value="uploads">
+                    <Card><CardContent><CreatorDashboard user={user} /></CardContent></Card>
+                </TabsContent>
+                <TabsContent value="activity">
+                    <Card><CardContent><UserDashboard /></CardContent></Card>
+                </TabsContent>
+            </Tabs>
+        ) : (
+            <Card>
+                <CardContent className="pt-6">
+                    <h2 className="text-xl font-semibold tracking-tight mb-2">Recent Activity</h2>
+                    <UserDashboard />
+                    <div className="text-center py-10 mt-8 border-t">
+                        <p className="text-muted-foreground mb-4">
+                        Want to share your music with the world?
+                        </p>
+                        <Button onClick={handleBecomeCreator}>
+                        <PlusCircle className="mr-2 h-4 w-4" /> Become a Creator
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+        )}
+
       </div>
       {userProfile && userRef && (
         <EditProfileDialog 

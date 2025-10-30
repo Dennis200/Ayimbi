@@ -25,6 +25,10 @@
           "type": "string",
           "description": "URL of the user's avatar image."
         },
+        "coverPhotoUrl": {
+          "type": "string",
+          "description": "URL for the user's profile cover photo."
+        },
         "socials": {
             "type": "object",
             "properties": {
@@ -32,9 +36,14 @@
                 "instagram": { "type": "string" },
                 "website": { "type": "string" }
             }
+        },
+        "role": {
+          "type": "string",
+          "enum": ["user", "creator", "admin"],
+          "description": "The user's role in the application."
         }
       },
-      "required": ["name", "email"]
+      "required": ["name", "email", "role"]
     },
     "artist": {
       "title": "Artist",

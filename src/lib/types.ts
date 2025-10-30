@@ -5,6 +5,7 @@ export type User = {
   bio?: string;
   email: string;
   avatarUrl: string;
+  coverPhotoUrl?: string;
   role: 'user' | 'creator' | 'admin';
   socials?: {
     twitter?: string;
