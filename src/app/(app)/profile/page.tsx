@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useUser, useFirestore, useCollection } from '@/firebase';
 import { Header } from '@/components/layout/header';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -11,8 +12,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { PlusCircle, Music, Share2, Twitter, Instagram, Globe } from 'lucide-react';
-import { doc, setDoc, collection, query, where, orderBy, limit } from 'firebase/firestore';
+import { PlusCircle, Music, Share2, Twitter, Instagram, Globe, Edit } from 'lucide-react';
+import { doc, setDoc, collection, query, where } from 'firebase/firestore';
 import { useDoc } from '@/firebase';
 import { useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -21,10 +22,11 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { useMusicPlayer } from '@/hooks/use-music-player';
 import Image from 'next/image';
+import { EditProfileDialog } from '@/components/auth/edit-profile-dialog';
 
 function CreatorDashboard({ user }: { user: import('firebase/auth').User }) {
   const firestore = useFirestore();
-  const { play: playSong, currentSong: activeSong, isPlaying } = useMusicPlayer();
+  const { play: playSong } = useMusicPlayer();
 
   const songsQuery = useMemo(() => {
     if (!user) return null;
@@ -109,6 +111,7 @@ export default function ProfilePage() {
   const { user, loading: userLoading } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   const userRef = useMemo(() => {
     if (!user) return null;
@@ -176,24 +179,24 @@ export default function ProfilePage() {
           <CardHeader>
             <div className="flex flex-col sm:flex-row items-center gap-6">
               <Avatar className="h-28 w-28">
-                <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? ''} />
+                <AvatarImage src={userProfile?.avatarUrl ?? user.photoURL ?? ''} alt={userProfile?.name ?? ''} />
                 <AvatarFallback className="text-4xl">
-                  {user.displayName?.charAt(0) || user.email?.charAt(0)}
+                  {userProfile?.name?.charAt(0) || user.displayName?.charAt(0) || user.email?.charAt(0)}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 text-center sm:text-left">
                 <div className="flex items-center justify-center sm:justify-start gap-4">
-                  <CardTitle className="text-3xl">{user.displayName}</CardTitle>
+                  <CardTitle className="text-3xl">{userProfile?.name || user.displayName}</CardTitle>
                   {userProfile?.role === 'creator' && (
                      <CardDescription className="font-semibold text-primary mt-1 border border-primary px-2 py-0.5 rounded-full text-xs">CREATOR</CardDescription>
                   )}
                 </div>
                 <CardDescription>@{userProfile?.username || user.uid}</CardDescription>
                 
-                <p className="mt-2 text-sm text-muted-foreground">{userProfile?.bio || 'No bio yet.'}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{userProfile?.bio || 'No bio yet. Click edit to add one!'}</p>
                 
                 <div className="flex justify-center sm:justify-start gap-3 mt-3">
-                  {userProfile?.socials?.twitter && (
+                   {userProfile?.socials?.twitter && (
                     <Button variant="ghost" size="icon" asChild>
                       <a href={userProfile.socials.twitter} target="_blank" rel="noopener noreferrer"><Twitter className="h-5 w-5" /></a>
                     </Button>
@@ -210,6 +213,10 @@ export default function ProfilePage() {
                   )}
                    <Button variant="ghost" size="icon" onClick={handleShare}>
                       <Share2 className="h-5 w-5" />
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setIsEditOpen(true)}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit Profile
                     </Button>
                 </div>
               </div>
@@ -234,6 +241,14 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
       </div>
+      {userProfile && userRef && (
+        <EditProfileDialog 
+            open={isEditOpen} 
+            onOpenChange={setIsEditOpen} 
+            userProfile={userProfile}
+            userRef={userRef}
+        />
+      )}
     </>
   );
 }
