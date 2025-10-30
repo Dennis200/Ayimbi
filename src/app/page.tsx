@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Music, Twitter, Instagram, Facebook } from 'lucide-react';
@@ -13,7 +14,7 @@ export default function LandingPage() {
         <div className="flex h-20 items-center justify-between py-6">
           <Link href="/" className="flex items-center space-x-2">
             <Music className="h-6 w-6 text-primary" />
-            <span className="font-bold text-xl">MuseFlow</span>
+            <span className="font-bold text-xl">Ayimbi</span>
           </Link>
           <nav>
             <Button asChild>
@@ -48,7 +49,7 @@ export default function LandingPage() {
               Features
             </h2>
             <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
-              MuseFlow is packed with features to enhance your listening experience.
+              Ayimbi is packed with features to enhance your listening experience.
             </p>
           </div>
           <div className="mx-auto grid justify-center gap-4 sm:grid-cols-2 md:max-w-[64rem] md:grid-cols-3">
@@ -136,7 +137,7 @@ export default function LandingPage() {
               For Creators
             </h2>
             <p className="mt-4 max-w-md text-muted-foreground md:text-xl">
-              Upload your music, share your art, and connect with fans. MuseFlow gives you the tools to grow your audience.
+              Upload your music, share your art, and connect with fans. Ayimbi gives you the tools to grow your audience.
             </p>
             <Button asChild className="mt-6 w-fit">
               <Link href="/home">Become a Creator</Link>
@@ -160,7 +161,7 @@ export default function LandingPage() {
             <div>
               <Link href="/" className="flex items-center space-x-2 mb-4">
                 <Music className="h-6 w-6 text-primary" />
-                <span className="font-bold text-xl">MuseFlow</span>
+                <span className="font-bold text-xl">Ayimbi</span>
               </Link>
               <p className="text-sm text-muted-foreground">Your next-gen music streaming experience.</p>
             </div>
@@ -191,7 +192,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="mt-8 border-t pt-8 flex justify-between items-center">
-            <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} MuseFlow. All rights reserved.</p>
+            <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} Ayimbi. All rights reserved.</p>
           </div>
         </div>
       </footer>

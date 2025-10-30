@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -122,7 +123,7 @@ export function AuthDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Welcome to MuseFlow</DialogTitle>
+          <DialogTitle>Welcome to Ayimbi</DialogTitle>
           <DialogDescription>
             Sign in or create an account to continue.
           </DialogDescription>

@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
@@ -10,7 +11,7 @@ import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'MuseFlow',
+  title: 'Ayimbi',
   description: 'Your next-gen music streaming experience.',
 };
 
