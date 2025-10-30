@@ -13,8 +13,8 @@ export function useFirebaseStorage() {
 
   const uploadFile = async (path: string, file: File) => {
     const storageRef = ref(storage, path);
-    const snapshot = await uploadBytes(storageRef, file);
-    const downloadURL = await getDownloadURL(snapshot.ref);
+    await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(storageRef);
     return downloadURL;
   };
 
