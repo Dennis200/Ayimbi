@@ -80,8 +80,8 @@ export default function UploadPage() {
 
     try {
       // 1. Upload files to Firebase Storage
-      const audioPath = `music/${user.uid}/${Date.now()}_${data.audioFile.name}`;
-      const artworkPath = `artwork/${user.uid}/${Date.now()}_${data.artworkFile.name}`;
+      const audioPath = `uploads/music/${user.uid}/${Date.now()}_${data.audioFile.name}`;
+      const artworkPath = `uploads/artwork/${user.uid}/${Date.now()}_${data.artworkFile.name}`;
 
       const audioUrl = await uploadFile(audioPath, data.audioFile);
       const artworkUrl = await uploadFile(artworkPath, data.artworkFile);
