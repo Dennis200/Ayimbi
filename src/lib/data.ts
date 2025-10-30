@@ -26,24 +26,24 @@ const albumsData: Omit<Album, 'songs'>[] = [
 
 export const songs: Song[] = [
   // Album 1: Galactic Tides
-  { id: 'song-1', title: 'Nebula Drift', duration: 245, artist: artists[0], album: albumsData[0], audioUrl: '/placeholder.mp3', likes: 1200, shares: 340 },
-  { id: 'song-2', title: 'Starfall', duration: 195, artist: artists[0], album: albumsData[0], audioUrl: '/placeholder.mp3', likes: 2500, shares: 500 },
-  { id: 'song-3', title: 'Cosmic Rays', duration: 280, artist: artists[0], album: albumsData[0], audioUrl: '/placeholder.mp3', likes: 950, shares: 150, lyrics: 'Fading light, across the sky...' },
+  { id: 'song-1', title: 'Nebula Drift', duration: 245, artist: artists[0], album: albumsData[0], audioUrl: 'https://storage.googleapis.com/studioprod-assets/assets/Cyber-War.mp3', likes: 1200, shares: 340 },
+  { id: 'song-2', title: 'Starfall', duration: 195, artist: artists[0], album: albumsData[0], audioUrl: 'https://storage.googleapis.com/studioprod-assets/assets/Epic-Chase.mp3', likes: 2500, shares: 500 },
+  { id: 'song-3', title: 'Cosmic Rays', duration: 280, artist: artists[0], album: albumsData[0], audioUrl: 'https://storage.googleapis.com/studioprod-assets/assets/Losing-My-Patience.mp3', likes: 950, shares: 150, lyrics: 'Fading light, across the sky...' },
 
   // Album 2: Fireside Stories
-  { id: 'song-4', title: 'Worn Out Boots', duration: 210, artist: artists[1], album: albumsData[1], audioUrl: '/placeholder.mp3', likes: 3100, shares: 800 },
-  { id: 'song-5', title: 'Amber Glow', duration: 185, artist: artists[1], album: albumsData[1], audioUrl: '/placeholder.mp3', likes: 1800, shares: 420 },
-  { id: 'song-6', title: 'Morning Mist', duration: 225, artist: artists[1], album: albumsData[1], audioUrl: '/placeholder.mp3', likes: 2200, shares: 610 },
+  { id: 'song-4', title: 'Worn Out Boots', duration: 210, artist: artists[1], album: albumsData[1], audioUrl: 'https://storage.googleapis.com/studioprod-assets/assets/Acoustic-Vibes.mp3', likes: 3100, shares: 800 },
+  { id: 'song-5', title: 'Amber Glow', duration: 185, artist: artists[1], album: albumsData[1], audioUrl: 'https://storage.googleapis.com/studioprod-assets/assets/Calm-And-Peaceful.mp3', likes: 1800, shares: 420 },
+  { id: 'song-6', title: 'Morning Mist', duration: 225, artist: artists[1], album: albumsData[1], audioUrl: 'https://storage.googleapis.com/studioprod-assets/assets/Emotional-Sad-Piano.mp3', likes: 2200, shares: 610 },
   
   // EP 3: Neon Dusk
-  { id: 'song-7', title: 'City Lights', duration: 200, artist: artists[2], album: albumsData[2], audioUrl: '/placeholder.mp3', likes: 4200, shares: 1200 },
-  { id: 'song-8', title: 'Last Train', duration: 230, artist: artists[2], album: albumsData[2], audioUrl: '/placeholder.mp3', likes: 3800, shares: 950 },
+  { id: 'song-7', title: 'City Lights', duration: 200, artist: artists[2], album: albumsData[2], audioUrl: 'https://storage.googleapis.com/studioprod-assets/assets/Night-Out.mp3', likes: 4200, shares: 1200 },
+  { id: 'song-8', title: 'Last Train', duration: 230, artist: artists[2], album: albumsData[2], audioUrl: 'https://storage.googleapis.com/studioprod-assets/assets/The-Beat-of-Nature.mp3', likes: 3800, shares: 950 },
 
   // Singles / Other albums
-  { id: 'song-9', title: 'Zero Gravity', duration: 215, artist: artists[0], album: albumsData[3], audioUrl: '/placeholder.mp3', likes: 1500, shares: 400 },
-  { id: 'song-10', title: 'Riverstone', duration: 190, artist: artists[1], album: albumsData[4], audioUrl: '/placeholder.mp3', likes: 2800, shares: 750 },
-  { id: 'song-11', title: 'Electric Bloom', duration: 250, artist: artists[2], album: albumsData[5], audioUrl: '/placeholder.mp3', likes: 3300, shares: 890 },
-  { id: 'song-12', title: 'Midnight Drive', duration: 222, artist: artists[2], album: albumsData[2], audioUrl: '/placeholder.mp3', likes: 5000, shares: 1500, lyrics: 'Streetlights paint the road...' },
+  { id: 'song-9', title: 'Zero Gravity', duration: 215, artist: artists[0], album: albumsData[3], audioUrl: 'https://storage.googleapis.com/studioprod-assets/assets/Through-The-Space.mp3', likes: 1500, shares: 400 },
+  { id: 'song-10', title: 'Riverstone', duration: 190, artist: artists[1], album: albumsData[4], audioUrl: 'https://storage.googleapis.com/studioprod-assets/assets/Acoustic-Vibes.mp3', likes: 2800, shares: 750 },
+  { id: 'song-11', title: 'Electric Bloom', duration: 250, artist: artists[2], album: albumsData[5], audioUrl: 'https://storage.googleapis.com/studioprod-assets/assets/The-Beat-of-Nature.mp3', likes: 3300, shares: 890 },
+  { id: 'song-12', title: 'Midnight Drive', duration: 222, artist: artists[2], album: albumsData[2], audioUrl: 'https://storage.googleapis.com/studioprod-assets/assets/Night-Out.mp3', likes: 5000, shares: 1500, lyrics: 'Streetlights paint the road...' },
 ];
 
 export const albums: Album[] = albumsData.map(album => ({
