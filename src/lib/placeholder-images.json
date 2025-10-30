@@ -1,3 +1,64 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero",
+      "description": "A person wearing headphones, enjoying music.",
+      "imageUrl": "https://images.unsplash.com/photo-1658874379930-13ab23191da6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxwZXJzb24lMjBoZWFkcGhvbmVzfGVufDB8fHx8MTc2MTgzODc0M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person headphones"
+    },
+    {
+      "id": "album-1",
+      "description": "Abstract colorful album art",
+      "imageUrl": "https://images.unsplash.com/photo-1533158326339-7f3cf2404354?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxhYnN0cmFjdCUyMGNvbG9yZnVsfGVufDB8fHx8MTc2MTczNzExOHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "abstract colorful"
+    },
+    {
+      "id": "album-2",
+      "description": "Monochrome geometric album art",
+      "imageUrl": "https://images.unsplash.com/photo-1741335661526-56848e5db39a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxtb25vY2hyb21lJTIwZ2VvbWV0cmljfGVufDB8fHx8MTc2MTg0NTA2M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "monochrome geometric"
+    },
+    {
+      "id": "album-3",
+      "description": "Nature-inspired album art",
+      "imageUrl": "https://images.unsplash.com/photo-1526239187794-f8c27c7872ee?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxuYXR1cmUlMjBsYW5kc2NhcGV8ZW58MHx8fHwxNzYxODI4Nzk4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "nature landscape"
+    },
+    {
+      "id": "album-4",
+      "description": "Urban cityscape album art",
+      "imageUrl": "https://images.unsplash.com/photo-1644340416937-3b35132e7590?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHx1cmJhbiUyMGNpdHlzY2FwZXxlbnwwfHx8fDE3NjE3ODU4NDF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "urban cityscape"
+    },
+    {
+      "id": "album-5",
+      "description": "Minimalist design album art",
+      "imageUrl": "https://images.unsplash.com/photo-1683383277379-644816d886e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxtaW5pbWFsaXN0JTIwZGVzaWdufGVufDB8fHx8MTc2MTgzNTc5Mnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "minimalist design"
+    },
+    {
+      "id": "album-6",
+      "description": "Psychedelic album art",
+      "imageUrl": "https://images.unsplash.com/photo-1711655803344-e36c459f6980?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cHN5Y2hlZGVsaWMlMjBhcnR8ZW58MHx8fHwxNzYxODQ1MDYzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "psychedelic art"
+    },
+    {
+      "id": "artist-1",
+      "description": "Portrait of a female artist",
+      "imageUrl": "https://images.unsplash.com/photo-1524255684952-d7185b509571?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxmZW1hbGUlMjBwb3J0cmFpdHxlbnwwfHx8fDE3NjE3NDkwMzl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "female portrait"
+    },
+    {
+      "id": "artist-2",
+      "description": "Portrait of a male artist",
+      "imageUrl": "https://images.unsplash.com/photo-1715412507413-c7416b47cacb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxtYWxlJTIwcG9ydHJhaXR8ZW58MHx8fHwxNzYxNzc1NzQ0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "male portrait"
+    },
+    {
+      "id": "artist-3",
+      "description": "Portrait of a music band",
+      "imageUrl": "https://images.unsplash.com/photo-1483101974978-cf266fdf1139?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxtdXNpYyUyMGJhbmR8ZW58MHx8fHwxNzYxNzY4NjgwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "music band"
+    }
+  ]
 }
