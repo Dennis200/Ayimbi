@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, Library, User, Music } from 'lucide-react';
+import { Home, Search, Library, User, Music, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Logo } from '../logo';
 import { Button } from '../ui/button';
@@ -10,6 +10,7 @@ import { Button } from '../ui/button';
 const navItems = [
   { href: '/home', label: 'Home', icon: Home },
   { href: '/search', label: 'Search', icon: Search },
+  { href: '/creators', label: 'Creators', icon: Users },
   { href: '/library', label: 'Your Library', icon: Library },
 ];
 

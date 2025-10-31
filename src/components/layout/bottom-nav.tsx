@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, Library, User, Plus } from 'lucide-react';
+import { Home, Search, Library, User, Plus, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
 
@@ -10,7 +10,7 @@ const navItems = [
   { href: '/home', label: 'Home', icon: Home },
   { href: '/search', label: 'Search', icon: Search },
   { href: '/upload', label: 'Upload', icon: Plus, isCentral: true },
-  { href: '/library', label: 'Library', icon: Library },
+  { href: '/creators', label: 'Creators', icon: Users },
   { href: '/profile', label: 'Profile', icon: User },
 ];
 
@@ -38,7 +38,7 @@ export function BottomNav() {
               href={item.href}
               className={cn(
                 'inline-flex flex-col items-center justify-center px-5 hover:bg-secondary group',
-                pathname === item.href ? 'text-primary' : 'text-muted-foreground'
+                pathname.startsWith(item.href) ? 'text-primary' : 'text-muted-foreground'
               )}
             >
               <item.icon className="w-6 h-6 mb-1" />
