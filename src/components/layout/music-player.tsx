@@ -12,9 +12,6 @@ import {
   Heart,
   Share2,
   Download,
-  Volume2,
-  VolumeX,
-  Volume1,
   MoreHorizontal,
   Mic2,
   ListMusic,
@@ -47,10 +44,6 @@ export function MusicPlayer() {
     prevSong,
     progress,
     duration,
-    volume,
-    setVolume,
-    isMuted,
-    toggleMute,
     seek,
   } = useMusicPlayer();
   const firestore = useFirestore();
@@ -153,13 +146,6 @@ export function MusicPlayer() {
     seek(value[0]);
   };
 
-  const handleVolumeChange = (value: number[]) => {
-    setVolume(value[0] / 100);
-  };
-
-  const VolumeIcon =
-    isMuted || volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
-
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 h-[90px] w-full border-t bg-background/95 backdrop-blur-sm">
       <div className="container grid h-full grid-cols-12 items-center">
@@ -249,23 +235,6 @@ export function MusicPlayer() {
           <Button variant="ghost" size="icon" className="h-9 w-9">
             <ListMusic className="h-4 w-4" />
           </Button>
-          <div className="flex items-center w-32 gap-2 group">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9"
-              onClick={toggleMute}
-            >
-              <VolumeIcon className="h-5 w-5" />
-            </Button>
-            <Slider
-              value={[isMuted ? 0 : volume * 100]}
-              max={100}
-              step={1}
-              onValueChange={handleVolumeChange}
-              className="w-24"
-            />
-          </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-9 w-9">

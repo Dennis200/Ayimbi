@@ -35,7 +35,7 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [volume, setVolume] = useState(0.5);
+  const [volume, setVolume] = useState(1); // Set default volume to 1 (max)
   const [isMuted, setIsMuted] = useState(false);
   const [duration, setDuration] = useState(0);
   const [recentlyPlayed, setRecentlyPlayed] = useState<RecentlyPlayed[]>([]);
@@ -111,6 +111,14 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
       audioRef.current.muted = !isMuted;
     }
   };
+  
+  // No-op function as volume is controlled by device
+  const setVolume_ = (vol: number) => {
+    if (audioRef.current) {
+        audioRef.current.volume = vol;
+    }
+    setVolume(vol);
+  }
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -173,7 +181,7 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
       isMuted,
       duration,
       seek,
-      setVolume,
+      setVolume: setVolume_,
       toggleMute,
       recentlyPlayed
     }),
