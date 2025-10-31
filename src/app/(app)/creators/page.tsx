@@ -13,13 +13,11 @@ import { Loader2, Download, Play, BadgeCheck, Heart, Share2 } from 'lucide-react
 interface CreatorStats {
   totalPlays: number;
   totalDownloads: number;
-  totalLikes: number;
-  totalShares: number;
 }
 
 const CreatorCard = ({ creator }: { creator: User }) => {
   const firestore = useFirestore();
-  const [stats, setStats] = useState<CreatorStats>({ totalPlays: 0, totalDownloads: 0, totalLikes: 0, totalShares: 0 });
+  const [stats, setStats] = useState<CreatorStats>({ totalPlays: 0, totalDownloads: 0 });
   const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
@@ -32,18 +30,14 @@ const CreatorCard = ({ creator }: { creator: User }) => {
       
       let totalPlays = 0;
       let totalDownloads = 0;
-      let totalLikes = 0;
-      let totalShares = 0;
 
       songsSnapshot.forEach(doc => {
         const song = doc.data() as Song;
         totalPlays += song.playCount || 0;
         totalDownloads += song.downloadCount || 0;
-        totalLikes += song.likes || 0;
-        totalShares += song.shares || 0;
       });
 
-      setStats({ totalPlays, totalDownloads, totalLikes, totalShares });
+      setStats({ totalPlays, totalDownloads });
       setLoadingStats(false);
     };
 
@@ -53,37 +47,26 @@ const CreatorCard = ({ creator }: { creator: User }) => {
   return (
     <Link href={`/profile/${creator.id}`} passHref>
       <Card className="hover:bg-secondary transition-colors text-center h-full">
-        <CardContent className="p-4 flex flex-col items-center justify-between gap-4 h-full">
-          <Avatar className="h-24 w-24 border-2 border-primary">
-            <AvatarImage src={creator.avatarUrl} alt={creator.name} />
-            <AvatarFallback>{creator.name?.charAt(0)}</AvatarFallback>
-          </Avatar>
-          <div className="space-y-2 flex-grow flex flex-col justify-center">
+        <CardContent className="p-4 flex flex-col items-center justify-center gap-4 h-full">
+            <Avatar className="h-24 w-24 border-2 border-primary">
+                <AvatarImage src={creator.avatarUrl} alt={creator.name} />
+                <AvatarFallback>{creator.name?.charAt(0)}</AvatarFallback>
+            </Avatar>
             <div className="flex items-center justify-center gap-1">
               <p className="font-semibold truncate">{creator.name}</p>
               <BadgeCheck className="h-4 w-4 text-primary" />
             </div>
-            <p className="text-xs text-muted-foreground">@{creator.username}</p>
-          </div>
-          {loadingStats ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <div className="grid grid-cols-2 gap-2 w-full text-xs text-muted-foreground pt-2 border-t mt-auto">
-              <div className="flex items-center gap-1 justify-center">
-                <Play className="h-3 w-3" />
-                <span>{stats.totalPlays.toLocaleString()}</span>
+            {loadingStats ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+            <div className="grid grid-cols-2 gap-4 w-full text-sm text-muted-foreground pt-2 border-t mt-auto">
+              <div className="flex flex-col items-center gap-1 justify-center">
+                <Play className="h-4 w-4" />
+                <span>{stats.totalPlays.toLocaleString()} Plays</span>
               </div>
-              <div className="flex items-center gap-1 justify-center">
-                <Download className="h-3 w-3" />
-                <span>{stats.totalDownloads.toLocaleString()}</span>
-              </div>
-              <div className="flex items-center gap-1 justify-center">
-                <Heart className="h-3 w-3" />
-                <span>{stats.totalLikes.toLocaleString()}</span>
-              </div>
-              <div className="flex items-center gap-1 justify-center">
-                <Share2 className="h-3 w-3" />
-                <span>{stats.totalShares.toLocaleString()}</span>
+              <div className="flex flex-col items-center gap-1 justify-center">
+                <Download className="h-4 w-4" />
+                <span>{stats.totalDownloads.toLocaleString()} D/Ls</span>
               </div>
             </div>
           )}
