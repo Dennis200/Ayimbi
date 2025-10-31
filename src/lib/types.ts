@@ -1,3 +1,4 @@
+
 export type User = {
   id: string;
   name: string;
@@ -34,6 +35,7 @@ export type Song = {
   likes: number;
   shares: number;
   downloadCount: number;
+  commentCount: number;
   lyrics?: string;
   genre?: string;
 };

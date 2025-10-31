@@ -1,13 +1,15 @@
+
 'use client';
 
 import Image from 'next/image';
 import type { Song } from '@/lib/types';
 import { useMusicPlayer } from '@/hooks/use-music-player';
-import { Play } from 'lucide-react';
+import { Play, Heart, MessageCircle, Share2, Download } from 'lucide-react';
 import { Button } from './ui/button';
 import { useCollection, useMemoFirebase } from '@/firebase';
 import { collection, getFirestore, query } from 'firebase/firestore';
 import { useFirebaseApp } from '@/firebase';
+import { cn } from '@/lib/utils';
 
 interface SongCardProps {
   song: Song;
@@ -30,9 +32,19 @@ export function SongCard({ song, className }: SongCardProps) {
     }
   };
 
+  const formatCount = (count: number) => {
+    if (count >= 1000000) {
+      return `${(count / 1000000).toFixed(1)}M`;
+    }
+    if (count >= 1000) {
+      return `${(count / 1000).toFixed(1)}K`;
+    }
+    return count;
+  };
+
   return (
     <div
-      className={`group relative flex flex-col items-center space-y-3 ${className}`}
+      className={cn('group relative flex flex-col space-y-2', className)}
     >
       <div className="relative aspect-square w-full overflow-hidden rounded-md">
         <Image
@@ -55,6 +67,24 @@ export function SongCard({ song, className }: SongCardProps) {
         <p className="text-xs text-muted-foreground truncate">
           {song.artistName}
         </p>
+      </div>
+      <div className="flex items-center space-x-3 text-xs text-muted-foreground pt-1">
+        <div className="flex items-center gap-1">
+            <Heart className="h-3.5 w-3.5" />
+            <span>{formatCount(song.likes || 0)}</span>
+        </div>
+        <div className="flex items-center gap-1">
+            <MessageCircle className="h-3.5 w-3.5" />
+            <span>{formatCount(song.commentCount || 0)}</span>
+        </div>
+        <div className="flex items-center gap-1">
+            <Share2 className="h-3.5 w-3.5" />
+            <span>{formatCount(song.shares || 0)}</span>
+        </div>
+        <div className="flex items-center gap-1">
+            <Download className="h-3.5 w-3.5" />
+            <span>{formatCount(song.downloadCount || 0)}</span>
+        </div>
       </div>
     </div>
   );
