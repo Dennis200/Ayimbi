@@ -7,6 +7,7 @@ import { MusicPlayerProvider } from '@/contexts/music-player-provider';
 import { cn } from '@/lib/utils';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { EdgeStoreProvider } from '@/lib/edgestore';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -35,13 +36,15 @@ export default function RootLayout({
         />
       </head>
       <body className={cn('font-sans antialiased', inter.variable)}>
-        <FirebaseClientProvider>
-          <MusicPlayerProvider>
-            <FirebaseErrorListener />
-            {children}
-            <Toaster />
-          </MusicPlayerProvider>
-        </FirebaseClientProvider>
+        <EdgeStoreProvider>
+          <FirebaseClientProvider>
+            <MusicPlayerProvider>
+              <FirebaseErrorListener />
+              {children}
+              <Toaster />
+            </MusicPlayerProvider>
+          </FirebaseClientProvider>
+        </EdgeStoreProvider>
       </body>
     </html>
   );

@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useFirebaseStorage } from '@/lib/firebase-helpers';
 import { useFirestore, useUser } from '@/firebase';
 import {
   collection,
@@ -37,6 +36,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { useEdgeStore } from '@/lib/edgestore';
+import { Progress } from '@/components/ui/progress';
 
 const genres = ["Electronic", "Acoustic", "Rock", "Pop", "Hip-Hop", "Jazz", "Classical"];
 
@@ -52,7 +53,8 @@ type UploadFormValues = z.infer<typeof formSchema>;
 
 export default function UploadPage() {
   const [loading, setLoading] = useState(false);
-  const { uploadFile } = useFirebaseStorage();
+  const [progress, setProgress] = useState(0);
+  const { edgestore } = useEdgeStore();
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
@@ -79,14 +81,21 @@ export default function UploadPage() {
     setLoading(true);
 
     try {
-      // 1. Upload files to Firebase Storage
-      const audioPath = `uploads/music/${user.uid}/${Date.now()}_${data.audioFile.name}`;
-      const artworkPath = `uploads/artwork/${user.uid}/${Date.now()}_${data.artworkFile.name}`;
-
-      const [audioUrl, artworkUrl] = await Promise.all([
-        uploadFile(audioPath, data.audioFile),
-        uploadFile(artworkPath, data.artworkFile)
+      // 1. Upload files to EdgeStore
+      const [audioRes, artworkRes] = await Promise.all([
+        edgestore.publicFiles.upload({
+          file: data.audioFile,
+          onProgressChange: (progress) => {
+            setProgress(progress);
+          },
+        }),
+        edgestore.publicFiles.upload({
+          file: data.artworkFile,
+        }),
       ]);
+
+      const audioUrl = audioRes.url;
+      const artworkUrl = artworkRes.url;
       
       // 2. Create album document in Firestore
       const albumRef = doc(collection(firestore, 'albums'));
@@ -161,6 +170,7 @@ export default function UploadPage() {
     } finally {
       // This will now run even if a FirestorePermissionError is thrown
       setLoading(false);
+      setProgress(0);
     }
   };
 
@@ -258,6 +268,7 @@ export default function UploadPage() {
                 </FormItem>
               )}
             />
+            {loading && <Progress value={progress} className="w-full" />}
             <Button type="submit" disabled={loading} className="w-full">
               {loading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
