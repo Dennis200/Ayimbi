@@ -103,7 +103,20 @@ export default function SongPage() {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                          <div className="absolute bottom-4 left-4 right-4">
                             <h1 className="text-3xl font-bold text-white shadow-lg">{song.title}</h1>
-                            <Link href={`/profile/${song.artistId}`} className="text-lg text-white/80 hover:text-white transition-colors">{song.artistName}</Link>
+                            <div className="text-lg text-white/80 hover:text-white transition-colors">
+                                <Link href={`/profile/${song.artistId}`} className="hover:underline">{song.artistName}</Link>
+                                {song.featuredArtists && song.featuredArtists.length > 0 && (
+                                    <>
+                                        <span className="mx-1">& ft. </span>
+                                        {song.featuredArtists.map((fa, index) => (
+                                            <span key={index}>
+                                                {fa.name}
+                                                {index < song.featuredArtists!.length - 1 && ', '}
+                                            </span>
+                                        ))}
+                                    </>
+                                )}
+                            </div>
                          </div>
                     </div>
                     <div className="md:w-2/3 p-6 flex flex-col">

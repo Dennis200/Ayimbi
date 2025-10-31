@@ -24,6 +24,10 @@ export type Artist = {
   bio?: string;
 };
 
+export type FeaturedArtist = {
+  name: string;
+};
+
 export type Song = {
   id: string;
   title: string;
@@ -43,6 +47,7 @@ export type Song = {
   genre?: string;
   likeIds?: string[];
   isExclusive?: boolean;
+  featuredArtists?: FeaturedArtist[];
 };
 
 export type Album = {

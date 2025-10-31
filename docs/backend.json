@@ -66,6 +66,19 @@
         "playCount": {
           "type": "number",
           "description": "Total number of times the song has been played."
+        },
+        "featuredArtists": {
+          "type": "array",
+          "description": "List of featured artists on the song.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": ["name"]
+          }
         }
       },
       "required": [

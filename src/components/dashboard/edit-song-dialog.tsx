@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useFirestore, useUser } from '@/firebase';
@@ -32,17 +32,22 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Loader2 } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Song, Album } from '@/lib/types';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { ScrollArea } from '../ui/scroll-area';
 
+const featuredArtistSchema = z.object({
+    name: z.string().min(1, 'Artist name is required'),
+});
+
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   albumId: z.string().min(1, 'Album is required'),
   lyrics: z.string().optional(),
+  featuredArtists: z.array(featuredArtistSchema).optional(),
 });
 
 type EditSongFormValues = z.infer<typeof formSchema>;
@@ -65,7 +70,13 @@ export function EditSongDialog({ open, onOpenChange, song, albums }: EditSongDia
       title: song.title || '',
       albumId: song.albumId || '',
       lyrics: song.lyrics || '',
+      featuredArtists: song.featuredArtists || [],
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: 'featuredArtists',
   });
 
   const onSubmit = async (data: EditSongFormValues) => {
@@ -78,6 +89,7 @@ export function EditSongDialog({ open, onOpenChange, song, albums }: EditSongDia
         albumId: data.albumId,
         albumTitle: selectedAlbum?.title || '',
         lyrics: data.lyrics,
+        featuredArtists: data.featuredArtists,
     };
 
     const songRef = doc(firestore, 'songs', song.id);
@@ -141,6 +153,7 @@ export function EditSongDialog({ open, onOpenChange, song, albums }: EditSongDia
                         </SelectTrigger>
                         </FormControl>
                         <SelectContent>
+                        <SelectItem value="single">Single</SelectItem>
                         {albums.map(album => (
                             <SelectItem key={album.id} value={album.id}>{album.title}</SelectItem>
                         ))}
@@ -150,6 +163,41 @@ export function EditSongDialog({ open, onOpenChange, song, albums }: EditSongDia
                     </FormItem>
                 )}
                 />
+                <div className="space-y-2">
+                    <FormLabel>Featured Artists (Optional)</FormLabel>
+                    {fields.map((field, index) => (
+                      <div key={field.id} className="flex items-center gap-2">
+                        <FormField
+                          control={form.control}
+                          name={`featuredArtists.${index}.name`}
+                          render={({ field }) => (
+                            <FormItem className="flex-grow">
+                              <FormControl>
+                                <Input placeholder="Artist Name" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => remove(index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => append({ name: '' })}
+                    >
+                      <PlusCircle className="mr-2 h-4 w-4" /> Add Feature
+                    </Button>
+                </div>
                 <FormField
                 control={form.control}
                 name="lyrics"
