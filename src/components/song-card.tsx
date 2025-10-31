@@ -114,10 +114,13 @@ export function SongCard({ song, className }: SongCardProps) {
           variant="ghost"
           size="sm"
           onClick={handleLike}
-          className="flex items-center gap-1 px-1 h-auto -ml-1"
+          className={cn(
+              "flex items-center gap-1 px-1 h-auto -ml-1 text-xs",
+              isLiked ? 'text-red-500' : 'text-muted-foreground'
+          )}
         >
           <Heart
-            className={cn('h-5 w-5', isLiked && 'fill-red-500 text-red-500')}
+            className={cn('h-5 w-5', isLiked && 'fill-red-500')}
           />
           <span className="text-sm">{formatCount(song.likes || 0)}</span>
         </Button>
