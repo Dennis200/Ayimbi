@@ -45,8 +45,8 @@ const formSchema = z.object({
   songTitle: z.string().min(1, 'Song title is required'),
   albumTitle: z.string().min(1, 'Album title is required'),
   genre: z.string().min(1, 'Genre is required'),
-  audioFile: z.instanceof(File).refine((file) => file.size > 0, 'Audio file is required').refine(file => file.type.startsWith('audio/'), 'File must be an audio type.'),
-  artworkFile: z.instanceof(File).refine((file) => file.size > 0, 'Artwork file is required').refine(file => file.type.startsWith('image/'), 'File must be an image type.'),
+  audioFile: z.any().refine((file) => file instanceof File && file.size > 0, 'Audio file is required').refine(file => file?.type?.startsWith('audio/'), 'File must be an audio type.'),
+  artworkFile: z.any().refine((file) => file instanceof File && file.size > 0, 'Artwork file is required').refine(file => file?.type?.startsWith('image/'), 'File must be an image type.'),
 });
 
 type UploadFormValues = z.infer<typeof formSchema>;
