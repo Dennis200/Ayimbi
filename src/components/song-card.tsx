@@ -1,4 +1,3 @@
-
 'use client';
 
 import Image from 'next/image';
@@ -21,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Badge } from './ui/badge';
+import Link from 'next/link';
 
 interface SongCardProps {
   song: Song;
@@ -41,6 +41,7 @@ export function SongCard({ song, className }: SongCardProps) {
 
   const handlePlay = (e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     if (currentSong?.id === song.id) {
         togglePlay();
     } else if (songs) {
@@ -52,6 +53,7 @@ export function SongCard({ song, className }: SongCardProps) {
 
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     if (!user) {
       toast({
         title: 'Not Logged In',
@@ -80,7 +82,8 @@ export function SongCard({ song, className }: SongCardProps) {
   const isActive = currentSong?.id === song.id;
 
   return (
-    <div className={cn("bg-card p-3 rounded-lg flex gap-4 items-center group", className)}>
+    <Link href={`/song/${song.id}`} className="block group">
+    <div className={cn("bg-card p-3 rounded-lg flex gap-4 items-center transition-colors hover:bg-accent/50", className)}>
         <div className="relative shrink-0">
             <Image
                 src={song.artworkUrl}
@@ -123,5 +126,6 @@ export function SongCard({ song, className }: SongCardProps) {
             <Badge variant="secondary" className="px-2 py-0.5 text-xs">{song.genre}</Badge>
         </div>
     </div>
+    </Link>
   );
 }
