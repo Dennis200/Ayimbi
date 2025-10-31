@@ -101,14 +101,16 @@ service cloud.firestore {
      * @path /songs/{songId}
      * @allow (get, list): Any user can read song data.
      * @allow (create): An authenticated user can create a song if the artistId matches their UID.
-     * @allow (update, delete): No one can modify song data without custom authorization logic.
+     * @allow (update): An authenticated user can update a song.
+     * @allow (delete): No one can modify song data without custom authorization logic.
      * @deny (create, update, delete): Any unauthenticated user.
      * @principle Public read access with restricted writes.
      */
     match /songs/{songId} {
       allow get, list: if true;
       allow create: if isSignedIn() && request.resource.data.artistId == request.auth.uid;
-      allow update, delete: if false;
+      allow update: if isSignedIn();
+      allow delete: if false;
     }
 
     /**
