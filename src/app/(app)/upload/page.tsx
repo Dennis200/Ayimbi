@@ -1,17 +1,16 @@
 
 'use client';
 
-import { useState, useRef } from 'react';
-import { useForm } from 'react-hook-form';
+import { useState } from 'react';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useFirestore, useUser } from '@/firebase';
 import {
   collection,
-  addDoc,
+  writeBatch,
   serverTimestamp,
   doc,
-  setDoc,
 } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,24 +31,26 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Header } from '@/components/layout/header';
-import { Loader2 } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Progress } from '@/components/ui/progress';
 import { upload } from '@vercel/blob/client';
-import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 
-const genres = ["Electronic", "Acoustic", "Rock", "Pop", "Hip-Hop", "Jazz", "Classical"];
+const trackSchema = z.object({
+  title: z.string().min(1, 'Track title is required'),
+  audioFile: z.any().refine((file) => file instanceof File && file.size > 0, 'An audio file is required.'),
+});
 
 const formSchema = z.object({
-  songTitle: z.string().min(1, 'Song title is required'),
-  albumTitle: z.string().min(1, 'Album title is required'),
-  genre: z.string().min(1, 'Genre is required'),
-  lyrics: z.string().optional(),
-  audioFile: z.any().refine((file) => file instanceof File && file.size > 0, 'Audio file is required').refine(file => file?.type?.startsWith('audio/'), 'File must be an audio type.'),
-  artworkFile: z.any().refine((file) => file instanceof File && file.size > 0, 'Artwork file is required').refine(file => file?.type?.startsWith('image/'), 'File must be an image type.'),
+  collectionTitle: z.string().min(1, 'Album/EP title is required'),
+  collectionType: z.enum(['album', 'ep'], { required_error: 'You must select a type.' }),
+  artworkFile: z.any().refine((file) => file instanceof File && file.size > 0, 'Artwork file is required'),
+  tracks: z.array(trackSchema).min(1, 'At least one track is required.'),
 });
 
 type UploadFormValues = z.infer<typeof formSchema>;
@@ -65,117 +66,110 @@ export default function UploadPage() {
   const form = useForm<UploadFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      songTitle: '',
-      albumTitle: '',
-      genre: '',
-      lyrics: '',
+      collectionTitle: '',
+      tracks: [{ title: '', audioFile: null }],
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: 'tracks',
   });
 
   const onSubmit = async (data: UploadFormValues) => {
     if (!user) {
-      toast({
-        title: 'Authentication Error',
-        description: 'You must be logged in to upload music.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Authentication Error', description: 'You must be logged in to upload music.', variant: 'destructive' });
       return;
     }
     setLoading(true);
 
     try {
-      // 1. Upload files to Vercel Blob
-      const [artworkBlob, audioBlob] = await Promise.all([
-        upload(data.artworkFile.name, data.artworkFile, {
-            access: 'public',
-            handleUploadUrl: '/api/upload',
-        }),
-        upload(data.audioFile.name, data.audioFile, {
-            access: 'public',
-            handleUploadUrl: '/api/upload',
-            onProgress: (progress) => {
-                setProgress(progress);
-            }
-        })
-      ]);
-
+      // 1. Upload Artwork
+      setProgress(5);
+      const artworkBlob = await upload(data.artworkFile.name, data.artworkFile, {
+        access: 'public',
+        handleUploadUrl: '/api/upload',
+      });
       const artworkUrl = artworkBlob.url;
-      const audioUrl = audioBlob.url;
-      
-      // 2. Create album document in Firestore
+      setProgress(15);
+
+      // 2. Upload all audio files
+      const audioUploadPromises = data.tracks.map((track, index) =>
+        upload(track.audioFile.name, track.audioFile, {
+          access: 'public',
+          handleUploadUrl: '/api/upload',
+          onProgress: (p) => {
+            const baseProgress = 15;
+            const totalAudioProgress = 80;
+            const progressPerFile = totalAudioProgress / data.tracks.length;
+            const currentFileProgress = (p / 100) * progressPerFile;
+            const uploadedFilesProgress = index * progressPerFile;
+            setProgress(baseProgress + uploadedFilesProgress + currentFileProgress);
+          },
+        })
+      );
+      const audioBlobs = await Promise.all(audioUploadPromises);
+      setProgress(95);
+
+      // 3. Prepare batch write for Firestore
+      const batch = writeBatch(firestore);
+
+      // 4. Create album document
       const albumRef = doc(collection(firestore, 'albums'));
       const albumData = {
-          id: albumRef.id,
-          title: data.albumTitle,
-          artistId: user.uid,
-          artistName: user.displayName || 'Unknown Artist',
-          artworkUrl: artworkUrl,
-          releaseDate: new Date().toISOString().split('T')[0], // Today's date
-          type: 'album' as const,
-      };
-      
-      setDoc(albumRef, albumData)
-        .catch(async (serverError) => {
-          const permissionError = new FirestorePermissionError({
-            path: albumRef.path,
-            operation: 'create',
-            requestResourceData: albumData,
-          });
-          errorEmitter.emit('permission-error', permissionError);
-          // Re-throw to stop execution but be caught by the outer try-catch
-          throw permissionError;
-        });
-
-      // 3. Create song document in Firestore
-      const songCollection = collection(firestore, 'songs');
-      const songData = {
-        title: data.songTitle,
-        genre: data.genre,
-        lyrics: data.lyrics,
-        duration: 0, // Placeholder, can be extracted from audio metadata client-side
+        id: albumRef.id,
+        title: data.collectionTitle,
         artistId: user.uid,
         artistName: user.displayName || 'Unknown Artist',
-        albumId: albumRef.id,
-        albumTitle: data.albumTitle,
-        artworkUrl,
-        audioUrl,
-        likes: 0,
-        playCount: 0,
-        shares: 0,
-        downloadCount: 0,
-        createdAt: serverTimestamp(),
+        artworkUrl: artworkUrl,
+        releaseDate: new Date().toISOString().split('T')[0],
+        type: data.collectionType,
       };
+      batch.set(albumRef, albumData);
 
-      addDoc(songCollection, songData)
-        .catch(async (serverError) => {
-          const permissionError = new FirestorePermissionError({
-            path: songCollection.path,
-            operation: 'create',
-            requestResourceData: songData,
-          });
-          errorEmitter.emit('permission-error', permissionError);
-           // Re-throw to stop execution but be caught by the outer try-catch
-          throw permissionError;
-        });
+      // 5. Create song documents
+      audioBlobs.forEach((audioBlob, index) => {
+        const trackData = data.tracks[index];
+        const songRef = doc(collection(firestore, 'songs'));
+        const songData = {
+          id: songRef.id,
+          title: trackData.title,
+          duration: 0, // Placeholder
+          artistId: user.uid,
+          artistName: user.displayName || 'Unknown Artist',
+          albumId: albumRef.id,
+          albumTitle: data.collectionTitle,
+          artworkUrl,
+          audioUrl: audioBlob.url,
+          likes: 0,
+          playCount: 0,
+          shares: 0,
+          downloadCount: 0,
+          createdAt: serverTimestamp(),
+        };
+        batch.set(songRef, songData);
+      });
+      
+      // 6. Commit batch
+      await batch.commit();
+      setProgress(100);
 
       toast({
         title: 'Upload Successful',
-        description: `"${data.songTitle}" has been added.`,
+        description: `"${data.collectionTitle}" has been added.`,
       });
 
       router.push('/dashboard');
     } catch (error: any) {
       console.error('Upload failed:', error);
-      // Don't show a toast for permission errors, as they are handled by the global listener
       if (!(error instanceof FirestorePermissionError)) {
-          toast({
-            title: 'Upload Failed',
-            description: error.message || 'An unexpected error occurred.',
-            variant: 'destructive',
-          });
+        toast({
+          title: 'Upload Failed',
+          description: error.message || 'An unexpected error occurred.',
+          variant: 'destructive',
+        });
       }
     } finally {
-      // This will now run even if a FirestorePermissionError is thrown
       setLoading(false);
       setProgress(0);
     }
@@ -183,118 +177,131 @@ export default function UploadPage() {
 
   return (
     <>
-      <Header title="Upload Music" />
-      <div className="container max-w-2xl py-10">
+      <Header title="Upload Album / EP" />
+      <div className="container max-w-4xl py-10">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <FormField
-              control={form.control}
-              name="songTitle"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Song Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="My Awesome Track" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="albumTitle"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Album Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Best Of Me" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="genre"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Genre</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a genre" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {genres.map(genre => (
-                        <SelectItem key={genre} value={genre}>{genre}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="lyrics"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Lyrics (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="You can add song lyrics here..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="audioFile"
-              render={({ field: { onChange, value, ...rest } }) => (
-                <FormItem>
-                  <FormLabel>Audio File</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="file"
-                      accept="audio/*"
-                      onChange={(e) => {
-                        onChange(e.target.files ? e.target.files[0] : null);
-                      }}
-                      {...rest}
+            <Card>
+              <CardContent className="p-6 space-y-6">
+                 <FormField
+                  control={form.control}
+                  name="collectionTitle"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Album / EP Title</FormLabel>
+                      <FormControl>
+                        <Input placeholder="My Awesome Collection" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                    control={form.control}
+                    name="collectionType"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Collection Type</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select a type (Album or EP)" />
+                            </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                <SelectItem value="album">Album</SelectItem>
+                                <SelectItem value="ep">EP</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                        </FormItem>
+                    )}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="artworkFile"
-              render={({ field: { onChange, value, ...rest } }) => (
-                <FormItem>
-                  <FormLabel>Album Artwork</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="file"
-                      accept="image/png, image/jpeg, image/jpg"
-                      onChange={(e) => {
-                        onChange(e.target.files ? e.target.files[0] : null);
-                      }}
-                      {...rest}
+                    <FormField
+                    control={form.control}
+                    name="artworkFile"
+                    render={({ field: { onChange, value, ...rest } }) => (
+                        <FormItem>
+                        <FormLabel>Artwork</FormLabel>
+                        <FormControl>
+                            <Input
+                            type="file"
+                            accept="image/png, image/jpeg, image/jpg"
+                            onChange={(e) => onChange(e.target.files ? e.target.files[0] : null)}
+                            {...rest}
+                            />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Separator />
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Tracks</h3>
+              {fields.map((field, index) => (
+                <Card key={field.id}>
+                    <CardContent className="p-4">
+                        <div className="flex items-start gap-4">
+                            <span className="text-lg font-bold text-muted-foreground pt-3">{index + 1}</span>
+                            <div className="flex-grow space-y-4">
+                                <FormField
+                                    control={form.control}
+                                    name={`tracks.${index}.title`}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                        <FormLabel>Track Title</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder={`Track ${index + 1} Title`} {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name={`tracks.${index}.audioFile`}
+                                    render={({ field: { onChange, value, ...rest } }) => (
+                                        <FormItem>
+                                        <FormLabel>Audio File</FormLabel>
+                                        <FormControl>
+                                            <Input type="file" accept="audio/*" onChange={(e) => onChange(e.target.files ? e.target.files[0] : null)} {...rest} />
+                                        </FormControl>
+                                        <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => remove(index)}
+                                disabled={fields.length <= 1}
+                                className="mt-7"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <Button type="button" variant="outline" onClick={() => append({ title: '', audioFile: null })}>
+              <PlusCircle className="mr-2 h-4 w-4" /> Add Another Track
+            </Button>
+            
+            <Separator />
+
             {loading && <Progress value={progress} className="w-full" />}
-            <Button type="submit" disabled={loading} className="w-full">
-              {loading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                'Upload Song'
-              )}
+            <Button type="submit" disabled={loading} size="lg" className="w-full">
+              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Upload Collection'}
             </Button>
           </form>
         </Form>

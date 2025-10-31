@@ -38,7 +38,7 @@ export type Song = {
   playCount: number;
   shares: number;
   downloadCount: number;
-  commentCount: number;
+  commentCount?: number;
   lyrics?: string;
   genre?: string;
   likeIds?: string[];
@@ -53,7 +53,7 @@ export type Album = {
   artistName: string;
   artworkUrl: string;
   releaseDate: string;
-  songs: Song[];
+  songs?: Song[];
 };
 
 export type Playlist = {
