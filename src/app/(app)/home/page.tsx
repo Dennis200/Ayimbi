@@ -21,7 +21,7 @@ export default function HomePage() {
   );
 
   const albumsQuery = useMemoFirebase(
-    () => query(collection(firestore, 'albums'), limit(4)),
+    () => query(collection(firestore, 'albums'), limit(5)),
     [firestore]
   );
   const { data: newReleases, isLoading: albumsLoading } = useCollection<Album>(
@@ -38,7 +38,7 @@ export default function HomePage() {
           <h2 className="text-2xl font-semibold tracking-tight">
             Trending Now
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {loading
               ? Array.from({ length: 10 }).map((_, i) => (
                   <div key={i} className="space-y-2">
@@ -57,7 +57,7 @@ export default function HomePage() {
           <h2 className="text-2xl font-semibold tracking-tight">
             New Releases
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {loading
               ? Array.from({ length: 4 }).map((_, i) => (
                   <div key={i} className="space-y-2">

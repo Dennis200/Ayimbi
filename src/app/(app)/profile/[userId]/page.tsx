@@ -49,10 +49,10 @@ function CreatorDashboard({ profileUser }: { profileUser: UserType }) {
           {uploadedSongs.map((song) => {
              const isActive = currentSong?.id === song.id;
             return (
-            <div key={song.id} className="flex items-center gap-4 p-2 rounded-md hover:bg-secondary transition-colors cursor-pointer" onClick={() => handlePlay(song)}>
+            <div key={song.id} className="flex items-center gap-4 p-2 rounded-md hover:bg-accent transition-colors cursor-pointer" onClick={() => handlePlay(song)}>
               <div className="relative">
                 <Image src={song.artworkUrl} alt={song.title} width={48} height={48} className="rounded-lg" />
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-lg">
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
                     {isActive ? (
                         isPlaying ? <Pause className="h-5 w-5 text-white" /> : <Play className="h-5 w-5 text-white" />
                     ) : <Play className="h-5 w-5 text-white" />}
@@ -70,7 +70,7 @@ function CreatorDashboard({ profileUser }: { profileUser: UserType }) {
           )})}
         </div>
       ) : (
-        <div className="text-center py-16 border-dashed border-2 rounded-lg mt-6 bg-secondary/50">
+        <div className="text-center py-16 border-dashed border-2 rounded-lg mt-6 bg-card">
           <Music className="mx-auto h-12 w-12 text-muted-foreground" />
           <h3 className="mt-4 text-lg font-medium">No posted audios</h3>
           <p className="text-muted-foreground mt-1 text-sm">This creator hasn't uploaded any tracks yet.</p>
@@ -119,19 +119,19 @@ export default function ProfilePage() {
 
   return (
     <>
-      <div className="relative h-48 w-full bg-secondary">
+      <div className="relative h-48 w-full bg-card">
           {userProfile.coverPhotoUrl && (
               <Image src={userProfile.coverPhotoUrl} alt="Cover photo" layout="fill" objectFit="cover" />
           )}
-          <div className="absolute inset-0 bg-black/30" />
-          <div className="absolute top-4 left-4">
-              <Button variant="ghost" size="icon" onClick={() => router.back()}>
+          <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+          <div className="absolute top-4 left-4 z-10">
+              <Button variant="ghost" size="icon" onClick={() => router.back()} className="bg-background/50 hover:bg-background/80">
                   <ArrowLeft className="h-6 w-6" />
               </Button>
           </div>
-          <div className="absolute top-4 right-4">
+          <div className="absolute top-4 right-4 z-10">
             {isOwnProfile && (
-                <Button variant="ghost" size="icon" onClick={() => setIsEditOpen(true)}>
+                <Button variant="ghost" size="icon" onClick={() => setIsEditOpen(true)} className="bg-background/50 hover:bg-background/80">
                     <Settings className="h-6 w-6" />
                 </Button>
             )}
@@ -201,7 +201,7 @@ export default function ProfilePage() {
                 <CreatorDashboard profileUser={userProfile} />
             </TabsContent>
             <TabsContent value="playlists">
-                <div className="text-center py-16 border-dashed border-2 rounded-lg mt-6 bg-secondary/50">
+                <div className="text-center py-16 border-dashed border-2 rounded-lg mt-6 bg-card">
                     <Music className="mx-auto h-12 w-12 text-muted-foreground" />
                     <h3 className="mt-4 text-lg font-medium">No playlists yet</h3>
                     <p className="text-muted-foreground mt-1 text-sm">Created playlists will appear here.</p>

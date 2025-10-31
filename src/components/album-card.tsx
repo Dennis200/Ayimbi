@@ -48,10 +48,6 @@ export function AlbumCard({ album, className }: AlbumCardProps) {
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
           </div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-4 flex flex-col justify-end">
-             <h3 className="text-lg font-semibold leading-tight truncate text-white">{album.title}</h3>
-             <p className="text-sm font-medium text-white/80">{album.artistName}</p>
-          </div>
           <Button 
             size="icon" 
             className="absolute bottom-3 right-3 z-10 h-11 w-11 rounded-full bg-primary text-primary-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
@@ -61,6 +57,10 @@ export function AlbumCard({ album, className }: AlbumCardProps) {
           </Button>
         </div>
       </CardContent>
+      <div className="p-4">
+        <h3 className="font-semibold leading-tight truncate">{album.title}</h3>
+        <p className="text-sm font-medium text-muted-foreground">{album.artistName}</p>
+      </div>
     </Card>
   );
 }

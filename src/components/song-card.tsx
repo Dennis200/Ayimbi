@@ -4,7 +4,7 @@
 import Image from 'next/image';
 import type { Song } from '@/lib/types';
 import { useMusicPlayer } from '@/hooks/use-music-player';
-import { Play, Heart, MessageCircle, Share2, Download, Crown, Music } from 'lucide-react';
+import { Play, Heart, MessageCircle, Share2, Download, Pause } from 'lucide-react';
 import { Button } from './ui/button';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import {
@@ -21,7 +21,6 @@ import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Badge } from './ui/badge';
-import { Card, CardContent } from './ui/card';
 
 interface SongCardProps {
   song: Song;
@@ -29,7 +28,7 @@ interface SongCardProps {
 }
 
 export function SongCard({ song, className }: SongCardProps) {
-  const { play, currentSong, isPlaying } = useMusicPlayer();
+  const { play, currentSong, isPlaying, togglePlay } = useMusicPlayer();
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
@@ -42,8 +41,10 @@ export function SongCard({ song, className }: SongCardProps) {
 
   const handlePlay = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (songs) {
-      play(song, songs);
+    if (currentSong?.id === song.id) {
+        togglePlay();
+    } else if (songs) {
+        play(song, songs);
     }
   };
 
@@ -79,38 +80,48 @@ export function SongCard({ song, className }: SongCardProps) {
   const isActive = currentSong?.id === song.id;
 
   return (
-    <Card className={cn('group w-full overflow-hidden transition-shadow hover:shadow-lg bg-card', className)}>
-      <CardContent className="p-0">
-        <div className="relative">
-           <div className="aspect-square w-full overflow-hidden">
-             <Image
-              src={song.artworkUrl}
-              alt={song.title}
-              width={300}
-              height={300}
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+    <div className={cn("bg-card p-3 rounded-lg flex gap-4 items-center group", className)}>
+        <div className="relative shrink-0">
+            <Image
+                src={song.artworkUrl}
+                alt={song.title}
+                width={80}
+                height={80}
+                className="rounded-md w-20 h-20 object-cover"
             />
-          </div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-4 flex flex-col justify-end">
-             <h3 className="text-lg font-semibold leading-tight truncate text-white">{song.title}</h3>
-             <p className="text-sm font-medium text-white/80">{song.artistName}</p>
-          </div>
-          <Button 
-            size="icon" 
-            className="absolute top-3 right-3 z-10 h-9 w-9 rounded-full bg-black/50 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={handleLike}
-          >
-             <Heart className={cn('h-5 w-5', isLiked && 'fill-red-500 text-red-500')} />
-          </Button>
-           <Button 
-            size="icon" 
-            className="absolute bottom-3 right-3 z-10 h-11 w-11 rounded-full bg-primary text-primary-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={handlePlay}
-          >
-             {isActive && isPlaying ? <Pause className="h-5 w-5 fill-current" /> : <Play className="h-5 w-5 fill-current ml-0.5" />}
-          </Button>
+             <Button 
+                size="icon" 
+                className="absolute inset-0 m-auto h-10 w-10 rounded-full bg-primary/80 text-primary-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={handlePlay}
+            >
+                {isActive && isPlaying ? <Pause className="h-5 w-5 fill-current" /> : <Play className="h-5 w-5 fill-current ml-0.5" />}
+            </Button>
         </div>
-      </CardContent>
-    </Card>
+        <div className="flex-1 min-w-0">
+            <p className="font-semibold truncate">{song.title}</p>
+            <p className="text-sm text-muted-foreground truncate">{song.artistName}</p>
+            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1">
+                    <Play className="h-3 w-3" />
+                    <span>{song.playCount ?? 0}</span>
+                </div>
+                 <div className="flex items-center gap-1">
+                    <Download className="h-3 w-3" />
+                    <span>{song.downloadCount ?? 0}</span>
+                </div>
+            </div>
+        </div>
+        <div className="flex flex-col items-center gap-2">
+            <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={handleLike}
+            >
+                <Heart className={cn('h-4 w-4', isLiked && 'fill-primary text-primary')} />
+            </Button>
+            <Badge variant="secondary" className="px-2 py-0.5 text-xs">{song.genre}</Badge>
+        </div>
+    </div>
   );
 }
