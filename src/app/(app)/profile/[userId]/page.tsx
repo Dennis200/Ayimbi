@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -16,6 +17,7 @@ import { useMusicPlayer } from '@/hooks/use-music-player';
 import Image from 'next/image';
 import { EditProfileDialog } from '@/components/auth/edit-profile-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs-profile";
+import { useParams } from 'next/navigation';
 
 
 function CreatorDashboard({ profileUser }: { profileUser: UserType }) {
@@ -66,12 +68,13 @@ function CreatorDashboard({ profileUser }: { profileUser: UserType }) {
 }
 
 
-export default function ProfilePage({ params }: { params: { userId: string } }) {
+export default function ProfilePage() {
   const { user: currentUser, loading: userLoading } = useUser();
   const firestore = useFirestore();
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const params = useParams();
 
-  const { userId } = params;
+  const userId = params.userId as string;
 
   const userRef = useMemoFirebase(() => {
     if (!userId) return null;
