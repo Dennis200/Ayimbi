@@ -6,13 +6,14 @@ import { SongCard } from '@/components/song-card';
 import { AlbumCard } from '@/components/album-card';
 import { collection, getFirestore, limit, query } from 'firebase/firestore';
 import { useFirebaseApp } from '@/firebase';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function HomePage() {
   const app = useFirebaseApp();
   const firestore = getFirestore(app);
 
   const songsQuery = useMemoFirebase(
-    () => query(collection(firestore, 'songs'), limit(5)),
+    () => query(collection(firestore, 'songs'), limit(10)),
     [firestore]
   );
   const { data: trendingSongs, isLoading: songsLoading } = useCollection<Song>(
@@ -27,40 +28,47 @@ export default function HomePage() {
     albumsQuery
   );
 
-  if (songsLoading || albumsLoading) {
-    return (
-      <>
-        <Header title="Home" />
-        <div className="container py-6">
-          <p>Loading...</p>
-        </div>
-      </>
-    );
-  }
+  const loading = songsLoading || albumsLoading;
 
   return (
     <>
       <Header title="Home" />
       <div className="container py-6">
-        <section className="space-y-4">
+        <section className="space-y-6">
           <h2 className="text-2xl font-semibold tracking-tight">
             Trending Now
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-8">
-            {trendingSongs?.map((song) => (
-              <SongCard key={song.id} song={song} />
-            ))}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            {loading
+              ? Array.from({ length: 10 }).map((_, i) => (
+                  <div key={i} className="space-y-2">
+                    <Skeleton className="aspect-square w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                ))
+              : trendingSongs?.map((song) => (
+                  <SongCard key={song.id} song={song} />
+                ))}
           </div>
         </section>
 
-        <section className="mt-8 space-y-4">
+        <section className="mt-10 space-y-6">
           <h2 className="text-2xl font-semibold tracking-tight">
             New Releases
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-8">
-            {newReleases?.map((album) => (
-              <AlbumCard key={album.id} album={album} />
-            ))}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {loading
+              ? Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="space-y-2">
+                    <Skeleton className="aspect-square w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                ))
+              : newReleases?.map((album) => (
+                  <AlbumCard key={album.id} album={album} />
+                ))}
           </div>
         </section>
       </div>
