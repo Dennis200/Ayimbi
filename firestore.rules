@@ -16,7 +16,7 @@
  *   `/songs/{songId}/likes/{likeId}` and `/songs/{songId}/comments/{commentId}`.
  *
  * Key Security Decisions:
- * - User listing is disallowed for privacy.
+ * - User listing is allowed for authenticated users to discover creators.
  * - Public read access is granted for artists, albums, and songs.
  * - Strict ownership is enforced for user profiles and playlists.
  * - Likes and comments are secured to ensure data integrity, with a user being allowed to create a like if they are authenticated.
@@ -112,14 +112,14 @@ service cloud.firestore {
      * @path /users/{userId}
      * @allow (create): A user can create their own profile if the userId matches their auth UID.
      * @allow (get, update, delete): A user can only access their own profile.
+     * @allow (list): Authenticated users can list other users to find creators.
      * @deny (get, update, delete): Any unauthenticated user, or a user trying to access another user's profile.
-     * @deny (list): Listing users is not allowed.
-     * @principle Enforces document ownership for user profiles.
+     * @principle Enforces document ownership for user profiles, while allowing discovery.
      */
     match /users/{userId} {
       allow get, update, delete: if isExistingOwner(userId);
       allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == userId;
-      allow list: if false;
+      allow list: if isSignedIn();
     }
 
     /**
