@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Song": {
@@ -244,6 +245,20 @@
           "items": {
             "type": "string"
           }
+        },
+        "followerIds": {
+          "type": "array",
+          "description": "List of user IDs who are following this user.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "followingIds": {
+          "type": "array",
+          "description": "List of user IDs this user is following.",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "required": [
@@ -453,6 +468,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to manage music-related data, user data, and social interactions within the MuseFlow application. It prioritizes Authorization Independence using path-based ownership and structural segregation, which simplifies security rules and enhances scalability. The design focuses on making rules easily auditable and aligns with DBAC (Database-Based Access Control). \n\nAuthorization Independence is achieved by structuring data such that access control can be determined based on the document path and the `request.auth.uid`, avoiding the need for complex `get()` calls in security rules.\n\nQAPs (Rules are not Filters) are supported by structurally segregating data with different access requirements. This ensures that list operations are secure and efficient because rules can be applied directly to collections without needing to filter data based on document content.\n\nThe structure includes the following:\n- User-owned data (playlists) are stored in hierarchical paths under the `/users/{userId}` collection.\n- Music-related entities (Artists, Albums, Songs) are stored in top-level collections.\n- Social interactions (Likes, Comments) are created as subcollections of Songs, establishing a clear ownership and context. User generated content like playlists will be stored as subcollections of users."
+    "reasoning": "The Firestore structure is designed to manage music-related data, user data, and social interactions within the MuseFlow application. It prioritizes Authorization Independence using path-based ownership and structural segregation, which simplifies security rules and enhances scalability. The design focuses on making rules easily auditable and aligns with DBAC (Database-Based Access Control). \n\nAuthorization Independence is achieved by structuring data such that access control can be determined based on the document path and the `request.auth.uid`, avoiding the need for complex `get()` calls in security rules.\n\nThe structure includes the following:\n- User-owned data (playlists) are stored in hierarchical paths under the `/users/{userId}` collection.\n- Music-related entities (Artists, Albums, Songs) are stored in top-level collections.\n- Social interactions (Likes, Comments) are created as subcollections of Songs, establishing a clear ownership and context. User generated content like playlists will be stored as subcollections of users."
   }
 }

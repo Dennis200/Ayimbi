@@ -16,6 +16,7 @@ import {
   MoreHorizontal,
   Mic2,
   ListMusic,
+  PlusCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useFirestore, useUser } from '@/firebase';
@@ -34,7 +35,12 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal
 } from '@/components/ui/dropdown-menu';
+import { AddToPlaylistSubMenu } from '../playlists/add-to-playlist-submenu';
 
 export function MusicPlayer() {
   const {
@@ -278,6 +284,17 @@ export function MusicPlayer() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" side="top" className="mb-2">
+                <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        <span>Add to Playlist</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                        <DropdownMenuSubContent sideOffset={5}>
+                           <AddToPlaylistSubMenu songId={currentSong.id} />
+                        </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                </DropdownMenuSub>
               <DropdownMenuItem onClick={handleDownload}>
                 <Download className="mr-2 h-4 w-4" />
                 <span>Download</span>

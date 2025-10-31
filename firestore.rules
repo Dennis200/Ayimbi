@@ -1,3 +1,4 @@
+
 /**
  * @fileoverview Firestore Security Rules for MuseFlow Prototyping.
  *
@@ -178,6 +179,16 @@ service cloud.firestore {
       allow get, list: if true;
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if false;
+    }
+
+    /**
+     * @description Rules for followers and following subcollections.
+     * @path /users/{userId}/followers/{followerId} and /users/{userId}/following/{followingId}
+     * @allow (read, write): Logged in users can manage their own follow relationships.
+     * @principle Ensures users can only manage their own social graph.
+     */
+    match /users/{userId}/{followCollection}/{followId} {
+      allow read, write: if isSignedIn() && (isOwner(userId) || isOwner(followId));
     }
   }
 }

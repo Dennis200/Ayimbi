@@ -13,6 +13,8 @@ export type User = {
     instagram?: string;
     website?: string;
   };
+  followerIds?: string[];
+  followingIds?: string[];
 };
 
 export type Artist = {
@@ -58,8 +60,9 @@ export type Playlist = {
   id: string;
   name: string;
   description?: string;
-  songs: Song[];
-  owner: User;
+  songIds: string[];
+  userId: string;
+  artworkUrl?: string;
 };
 
 export type ImagePlaceholder = {

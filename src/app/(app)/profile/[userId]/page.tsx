@@ -9,8 +9,8 @@ import {
   Card,
   CardContent,
 } from '@/components/ui/card';
-import { Music, MoreHorizontal, Settings, Twitter, Instagram, BadgeCheck, Pause, Play } from 'lucide-react';
-import { doc, collection, query, where } from 'firebase/firestore';
+import { Music, MoreHorizontal, Settings, Twitter, Instagram, BadgeCheck, Pause, Play, UserPlus, UserCheck } from 'lucide-react';
+import { doc, collection, query, where, runTransaction, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { useDoc } from '@/firebase';
 import type { User as UserType, Song } from '@/lib/types';
 import { useMusicPlayer } from '@/hooks/use-music-player';
@@ -19,6 +19,9 @@ import { EditProfileDialog } from '@/components/auth/edit-profile-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs-profile";
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 
 function CreatorDashboard({ profileUser }: { profileUser: UserType }) {
@@ -87,6 +90,7 @@ export default function ProfilePage() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const params = useParams();
   const router = useRouter();
+  const { toast } = useToast();
 
   const userId = params.userId as string;
 
@@ -100,6 +104,43 @@ export default function ProfilePage() {
   const loading = userLoading || profileLoading;
 
   const isOwnProfile = currentUser?.uid === userId;
+  const isFollowing = useMemo(() => currentUser?.followingIds?.includes(userId) ?? false, [currentUser, userId]);
+
+  const handleFollowToggle = async () => {
+    if (!currentUser) {
+        toast({ title: "Please login to follow creators.", variant: "destructive" });
+        return;
+    }
+    
+    const currentUserRef = doc(firestore, "users", currentUser.uid);
+    const targetUserRef = doc(firestore, "users", userId);
+
+    try {
+        await runTransaction(firestore, async (transaction) => {
+            if (isFollowing) {
+                // Unfollow
+                transaction.update(currentUserRef, { followingIds: arrayRemove(userId) });
+                transaction.update(targetUserRef, { followerIds: arrayRemove(currentUser.uid) });
+            } else {
+                // Follow
+                transaction.update(currentUserRef, { followingIds: arrayUnion(userId) });
+                transaction.update(targetUserRef, { followerIds: arrayUnion(currentUser.uid) });
+            }
+        });
+        toast({
+            title: isFollowing ? "Unfollowed" : "Followed",
+            description: `You are no longer following ${userProfile?.name}.`,
+        });
+    } catch (e: any) {
+        console.error("Follow/unfollow transaction failed: ", e);
+        const permissionError = new FirestorePermissionError({
+            path: currentUserRef.path,
+            operation: 'update',
+            requestResourceData: { followingIds: 'update' },
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    }
+  };
 
   if (loading) {
     return (
@@ -170,11 +211,11 @@ export default function ProfilePage() {
             </div>
              <div className="flex gap-6 pt-2">
                 <div className="text-center">
-                    <p className="font-bold text-lg">837K</p>
+                    <p className="font-bold text-lg">{userProfile?.followerIds?.length ?? 0}</p>
                     <p className="text-sm text-muted-foreground">Followers</p>
                 </div>
                  <div className="text-center">
-                    <p className="font-bold text-lg">671</p>
+                    <p className="font-bold text-lg">{userProfile?.followingIds?.length ?? 0}</p>
                     <p className="text-sm text-muted-foreground">Following</p>
                 </div>
             </div>
@@ -184,7 +225,10 @@ export default function ProfilePage() {
                         Edit Profile
                     </Button>
                 ) : (
-                    <Button size="sm">Follow</Button>
+                    <Button size="sm" onClick={handleFollowToggle} variant={isFollowing ? 'secondary' : 'default'}>
+                        {isFollowing ? <UserCheck className="mr-2 h-4 w-4" /> : <UserPlus className="mr-2 h-4 w-4" />}
+                        {isFollowing ? 'Following' : 'Follow'}
+                    </Button>
                 )}
                  <Button variant="ghost" size="icon">
                     <MoreHorizontal className="h-5 w-5" />

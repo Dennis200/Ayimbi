@@ -1,8 +1,9 @@
+
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, Library, User, Music, Users } from 'lucide-react';
+import { Home, Search, Library, User, Music, Users, ListMusic } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Logo } from '../logo';
 import { Button } from '../ui/button';
@@ -12,6 +13,10 @@ const navItems = [
   { href: '/search', label: 'Search', icon: Search },
   { href: '/creators', label: 'Creators', icon: Users },
   { href: '/library', label: 'Your Library', icon: Library },
+];
+
+const secondaryNavItems = [
+    { href: '/playlists', label: 'Playlists', icon: ListMusic },
 ];
 
 export function SidebarNav() {
@@ -34,6 +39,22 @@ export function SidebarNav() {
               key={item.label}
               asChild
               variant={pathname === item.href ? 'secondary' : 'ghost'}
+              className="w-full justify-start text-base"
+            >
+              <Link href={item.href}>
+                <item.icon className="mr-3 h-5 w-5" />
+                {item.label}
+              </Link>
+            </Button>
+          ))}
+        </nav>
+        <nav className="mt-4 space-y-1 px-2">
+            <p className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Library</p>
+             {secondaryNavItems.map((item) => (
+            <Button
+              key={item.label}
+              asChild
+              variant={pathname.startsWith(item.href) ? 'secondary' : 'ghost'}
               className="w-full justify-start text-base"
             >
               <Link href={item.href}>
