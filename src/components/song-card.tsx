@@ -5,8 +5,7 @@ import type { Song } from '@/lib/types';
 import { useMusicPlayer } from '@/hooks/use-music-player';
 import { Play } from 'lucide-react';
 import { Button } from './ui/button';
-import { useCollection } from '@/firebase';
-import { useMemo } from 'react';
+import { useCollection, useMemoFirebase } from '@/firebase';
 import { collection, getFirestore, query } from 'firebase/firestore';
 import { useFirebaseApp } from '@/firebase';
 
@@ -19,7 +18,7 @@ export function SongCard({ song, className }: SongCardProps) {
   const { play } = useMusicPlayer();
   const app = useFirebaseApp();
   const firestore = getFirestore(app);
-  const songsQuery = useMemo(
+  const songsQuery = useMemoFirebase(
     () => query(collection(firestore, 'songs')),
     [firestore]
   );
