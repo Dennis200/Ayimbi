@@ -1,8 +1,9 @@
+
 'use client';
 
 import Image from 'next/image';
 import { useMusicPlayer } from '@/hooks/use-music-player';
-import { Slider } from '@/components/layout/slider';
+import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import {
   Play,
@@ -133,6 +134,41 @@ export function MusicPlayer() {
     }
   };
 
+  const handleShare = async () => {
+    if (!currentSong) return;
+
+    const songRef = doc(firestore, 'songs', currentSong.id);
+    updateDoc(songRef, {
+      shares: increment(1),
+    }).catch(async (serverError) => {
+      const permissionError = new FirestorePermissionError({
+        path: songRef.path,
+        operation: 'update',
+        requestResourceData: { shares: 'increment' },
+      });
+      errorEmitter.emit('permission-error', permissionError);
+    });
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: currentSong.title,
+          text: `Check out "${currentSong.title}" by ${currentSong.artistName} on Ayimbi!`,
+          url: window.location.href, // Or a direct link to the song
+        });
+        toast({ title: "Song shared!" });
+      } catch (error) {
+        // Handle navigator.share() error
+        toast({ title: "Could not share song", variant: 'destructive'});
+      }
+    } else {
+       // Fallback for browsers that don't support navigator.share
+       navigator.clipboard.writeText(window.location.href);
+       toast({ title: "Link copied to clipboard!"});
+    }
+  };
+
+
   const formatTime = (time: number) => {
     if (isNaN(time)) return '0:00';
     const minutes = Math.floor(time / 60);
@@ -246,7 +282,7 @@ export function MusicPlayer() {
                 <Download className="mr-2 h-4 w-4" />
                 <span>Download</span>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleShare}>
                 <Share2 className="mr-2 h-4 w-4" />
                 <span>Share</span>
               </DropdownMenuItem>

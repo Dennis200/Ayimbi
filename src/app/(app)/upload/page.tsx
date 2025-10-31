@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef } from 'react';
@@ -139,6 +140,7 @@ export default function UploadPage() {
         artworkUrl,
         audioUrl,
         likes: 0,
+        playCount: 0,
         shares: 0,
         downloadCount: 0,
         createdAt: serverTimestamp(),

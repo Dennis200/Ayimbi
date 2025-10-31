@@ -8,35 +8,42 @@ import { Header } from '@/components/layout/header';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
-import { Loader2, Download, Play, BadgeCheck } from 'lucide-react';
+import { Loader2, Download, Play, BadgeCheck, Heart, Share2 } from 'lucide-react';
 
 interface CreatorStats {
   totalPlays: number;
   totalDownloads: number;
+  totalLikes: number;
+  totalShares: number;
 }
 
 const CreatorCard = ({ creator }: { creator: User }) => {
   const firestore = useFirestore();
-  const [stats, setStats] = useState<CreatorStats>({ totalPlays: 0, totalDownloads: 0 });
+  const [stats, setStats] = useState<CreatorStats>({ totalPlays: 0, totalDownloads: 0, totalLikes: 0, totalShares: 0 });
   const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
     const fetchCreatorStats = async () => {
       setLoadingStats(true);
+      if (!firestore) return;
+      
       const songsQuery = query(collection(firestore, 'songs'), where('artistId', '==', creator.id));
       const songsSnapshot = await getDocs(songsQuery);
       
       let totalPlays = 0;
       let totalDownloads = 0;
+      let totalLikes = 0;
+      let totalShares = 0;
 
       songsSnapshot.forEach(doc => {
         const song = doc.data() as Song;
-        // The play count is not implemented yet, we will use likes as a placeholder for now
-        totalPlays += song.likes || 0;
+        totalPlays += song.playCount || 0;
         totalDownloads += song.downloadCount || 0;
+        totalLikes += song.likes || 0;
+        totalShares += song.shares || 0;
       });
 
-      setStats({ totalPlays, totalDownloads });
+      setStats({ totalPlays, totalDownloads, totalLikes, totalShares });
       setLoadingStats(false);
     };
 
@@ -61,14 +68,22 @@ const CreatorCard = ({ creator }: { creator: User }) => {
           {loadingStats ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <div className="flex justify-around w-full text-xs text-muted-foreground pt-2 border-t mt-auto">
-              <div className="flex items-center gap-1">
+            <div className="grid grid-cols-2 gap-2 w-full text-xs text-muted-foreground pt-2 border-t mt-auto">
+              <div className="flex items-center gap-1 justify-center">
                 <Play className="h-3 w-3" />
                 <span>{stats.totalPlays.toLocaleString()}</span>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 justify-center">
                 <Download className="h-3 w-3" />
                 <span>{stats.totalDownloads.toLocaleString()}</span>
+              </div>
+              <div className="flex items-center gap-1 justify-center">
+                <Heart className="h-3 w-3" />
+                <span>{stats.totalLikes.toLocaleString()}</span>
+              </div>
+              <div className="flex items-center gap-1 justify-center">
+                <Share2 className="h-3 w-3" />
+                <span>{stats.totalShares.toLocaleString()}</span>
               </div>
             </div>
           )}
@@ -83,7 +98,7 @@ export default function CreatorsPage() {
   const firestore = useFirestore();
 
   const creatorsQuery = useMemoFirebase(
-    () => query(collection(firestore, 'users'), where('role', '==', 'creator')),
+    () => firestore ? query(collection(firestore, 'users'), where('role', '==', 'creator')) : null,
     [firestore]
   );
 

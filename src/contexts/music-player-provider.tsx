@@ -1,8 +1,11 @@
+
 'use client';
 
 import type { Song, RecentlyPlayed } from '@/lib/types';
 import type { ReactNode } from 'react';
 import React, { createContext, useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useFirestore } from '@/firebase';
+import { doc, increment, updateDoc } from 'firebase/firestore';
 
 type MusicPlayerContextType = {
   playlist: Song[];
@@ -15,12 +18,8 @@ type MusicPlayerContextType = {
   prevSong: () => void;
   audioRef: React.RefObject<HTMLAudioElement>;
   progress: number;
-  volume: number;
-  isMuted: boolean;
   duration: number;
   seek: (time: number) => void;
-  setVolume: (volume: number) => void;
-  toggleMute: () => void;
   recentlyPlayed: RecentlyPlayed[];
 };
 
@@ -31,14 +30,14 @@ export const MusicPlayerContext = createContext<
 const MAX_RECENTLY_PLAYED = 10;
 
 export function MusicPlayerProvider({ children }: { children: ReactNode }) {
+  const firestore = useFirestore();
   const [playlist, setPlaylist] = useState<Song[]>([]);
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [volume, setVolume] = useState(1); // Set default volume to 1 (max)
-  const [isMuted, setIsMuted] = useState(false);
   const [duration, setDuration] = useState(0);
   const [recentlyPlayed, setRecentlyPlayed] = useState<RecentlyPlayed[]>([]);
+  const hasTrackedPlay = useRef(false);
 
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -49,17 +48,29 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const trackPlay = useCallback((songId: string) => {
+    const songRef = doc(firestore, 'songs', songId);
+    updateDoc(songRef, {
+        playCount: increment(1)
+    });
+  }, [firestore]);
+
+
   const play = useCallback((song?: Song, newPlaylist?: Song[]) => {
     if (newPlaylist) {
       setPlaylist(newPlaylist);
     }
     const songToPlay = song || (newPlaylist && newPlaylist[0]) || playlist[0] || null;
+    
     if (songToPlay) {
-      setCurrentSong(songToPlay);
+      if (currentSong?.id !== songToPlay.id) {
+        setCurrentSong(songToPlay);
+        hasTrackedPlay.current = false; // Reset tracking for new song
+      }
       setIsPlaying(true);
       addToRecentlyPlayed(songToPlay);
     }
-  }, [playlist, addToRecentlyPlayed]);
+  }, [playlist, addToRecentlyPlayed, currentSong?.id]);
 
   const pause = useCallback(() => {
     setIsPlaying(false);
@@ -84,6 +95,7 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
        setCurrentSong(nextSongToPlay);
        addToRecentlyPlayed(nextSongToPlay);
        setIsPlaying(true);
+       hasTrackedPlay.current = false;
     }
   }, [findCurrentSongIndex, playlist, addToRecentlyPlayed]);
 
@@ -95,6 +107,7 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
        setCurrentSong(prevSongToPlay);
        addToRecentlyPlayed(prevSongToPlay);
        setIsPlaying(true);
+       hasTrackedPlay.current = false;
     }
   }, [findCurrentSongIndex, playlist, addToRecentlyPlayed]);
 
@@ -104,22 +117,7 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
       setProgress(time);
     }
   };
-
-  const toggleMute = () => {
-    setIsMuted(prev => !prev);
-    if (audioRef.current) {
-      audioRef.current.muted = !isMuted;
-    }
-  };
   
-  // No-op function as volume is controlled by device
-  const setVolume_ = (vol: number) => {
-    if (audioRef.current) {
-        audioRef.current.volume = vol;
-    }
-    setVolume(vol);
-  }
-
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -130,27 +128,21 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
       audio.pause();
     }
   }, [isPlaying, currentSong]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (audio) {
-      audio.volume = volume;
-      audio.muted = isMuted;
-    }
-  }, [volume, isMuted]);
   
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || !currentSong) return;
 
-    const handleTimeUpdate = () => setProgress(audio.currentTime);
+    const handleTimeUpdate = () => {
+      setProgress(audio.currentTime);
+      // Track play after 10 seconds
+      if (audio.currentTime > 10 && !hasTrackedPlay.current) {
+        trackPlay(currentSong.id);
+        hasTrackedPlay.current = true;
+      }
+    };
     const handleLoadedMetadata = () => {
       setDuration(audio.duration);
-      // Auto-extract duration for uploaded songs with placeholder duration
-      if (currentSong && currentSong.duration === 0) {
-        console.log("Updating song duration in context...");
-        // In a real app, you might want to update this in Firestore as well.
-      }
     };
     const handleEnded = () => nextSong();
 
@@ -163,7 +155,7 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [nextSong, currentSong]);
+  }, [nextSong, currentSong, trackPlay]);
 
   const value = useMemo(
     () => ({
@@ -177,15 +169,11 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
       prevSong,
       audioRef,
       progress,
-      volume,
-      isMuted,
       duration,
       seek,
-      setVolume: setVolume_,
-      toggleMute,
       recentlyPlayed
     }),
-    [playlist, currentSong, isPlaying, play, pause, togglePlay, nextSong, prevSong, progress, volume, isMuted, duration, recentlyPlayed]
+    [playlist, currentSong, isPlaying, play, pause, togglePlay, nextSong, prevSong, progress, duration, recentlyPlayed]
   );
 
   return (
