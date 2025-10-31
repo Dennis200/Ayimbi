@@ -25,7 +25,8 @@ import {
   Settings,
   User as UserIcon,
   Loader2,
-  Upload
+  Upload,
+  LayoutDashboard
 } from 'lucide-react';
 import { doc } from 'firebase/firestore';
 import type { User } from '@/lib/types';
@@ -85,7 +86,23 @@ export function UserNav() {
                 <span>Profile</span>
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            {userProfile?.role === 'creator' && (
+              <>
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard">
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                    <span>Dashboard</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/upload">
+                    <Upload className="mr-2 h-4 w-4" />
+                    <span>Upload Music</span>
+                  </Link>
+                </DropdownMenuItem>
+              </>
+            )}
+             <DropdownMenuItem>
               <CreditCard className="mr-2 h-4 w-4" />
               <span>Billing</span>
             </DropdownMenuItem>
@@ -93,14 +110,6 @@ export function UserNav() {
               <Settings className="mr-2 h-4 w-4" />
               <span>Settings</span>
             </DropdownMenuItem>
-            {userProfile?.role === 'creator' && (
-              <DropdownMenuItem asChild>
-                <Link href="/upload">
-                  <Upload className="mr-2 h-4 w-4" />
-                  <span>Upload Music</span>
-                </Link>
-              </DropdownMenuItem>
-            )}
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleLogout}>

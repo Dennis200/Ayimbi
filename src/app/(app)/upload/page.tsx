@@ -38,6 +38,7 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Progress } from '@/components/ui/progress';
 import { upload } from '@vercel/blob/client';
+import { Textarea } from '@/components/ui/textarea';
 
 const genres = ["Electronic", "Acoustic", "Rock", "Pop", "Hip-Hop", "Jazz", "Classical"];
 
@@ -45,6 +46,7 @@ const formSchema = z.object({
   songTitle: z.string().min(1, 'Song title is required'),
   albumTitle: z.string().min(1, 'Album title is required'),
   genre: z.string().min(1, 'Genre is required'),
+  lyrics: z.string().optional(),
   audioFile: z.any().refine((file) => file instanceof File && file.size > 0, 'Audio file is required').refine(file => file?.type?.startsWith('audio/'), 'File must be an audio type.'),
   artworkFile: z.any().refine((file) => file instanceof File && file.size > 0, 'Artwork file is required').refine(file => file?.type?.startsWith('image/'), 'File must be an image type.'),
 });
@@ -65,6 +67,7 @@ export default function UploadPage() {
       songTitle: '',
       albumTitle: '',
       genre: '',
+      lyrics: '',
     },
   });
 
@@ -127,6 +130,7 @@ export default function UploadPage() {
       const songData = {
         title: data.songTitle,
         genre: data.genre,
+        lyrics: data.lyrics,
         duration: 0, // Placeholder, can be extracted from audio metadata client-side
         artistId: user.uid,
         artistName: user.displayName || 'Unknown Artist',
@@ -157,7 +161,7 @@ export default function UploadPage() {
         description: `"${data.songTitle}" has been added.`,
       });
 
-      router.push('/home');
+      router.push('/dashboard');
     } catch (error: any) {
       console.error('Upload failed:', error);
       // Don't show a toast for permission errors, as they are handled by the global listener
@@ -225,6 +229,19 @@ export default function UploadPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="lyrics"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Lyrics (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="You can add song lyrics here..." {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
