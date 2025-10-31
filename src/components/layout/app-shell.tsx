@@ -16,8 +16,8 @@ export function AppShell({ children }: AppShellProps) {
   const { currentSong } = useMusicPlayer();
   const pathname = usePathname();
 
-  // Hide the main layout for the new profile page to give it its own layout
-  if (pathname === '/profile-new') {
+  // The profile page has its own layout
+  if (pathname.startsWith('/profile/')) {
     return <>{children}</>;
   }
 

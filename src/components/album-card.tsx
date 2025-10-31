@@ -39,7 +39,7 @@ export function AlbumCard({ album, className }: AlbumCardProps) {
      <Card className={cn('group w-full overflow-hidden transition-shadow hover:shadow-lg', className)}>
       <CardContent className="p-0">
         <div className="relative">
-           <div className="aspect-square w-full overflow-hidden bg-secondary">
+           <div className="aspect-square w-full overflow-hidden">
              <Image
               src={album.artworkUrl}
               alt={album.title}
@@ -48,16 +48,17 @@ export function AlbumCard({ album, className }: AlbumCardProps) {
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
           </div>
-        </div>
-        <div className="p-4 space-y-3">
-            <div>
-                 <p className="text-sm font-medium text-muted-foreground">{album.artistName}</p>
-                 <h3 className="text-lg font-semibold leading-tight truncate">{album.title}</h3>
-            </div>
-            <Button className="w-full font-semibold" onClick={handlePlay}>
-                <Play className="mr-2 h-4 w-4 fill-current"/>
-                Play Album
-            </Button>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-4 flex flex-col justify-end">
+             <h3 className="text-lg font-semibold leading-tight truncate text-white">{album.title}</h3>
+             <p className="text-sm font-medium text-white/80">{album.artistName}</p>
+          </div>
+          <Button 
+            size="icon" 
+            className="absolute bottom-3 right-3 z-10 h-11 w-11 rounded-full bg-primary text-primary-foreground shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={handlePlay}
+          >
+             <Play className="h-5 w-5 fill-current ml-0.5" />
+          </Button>
         </div>
       </CardContent>
     </Card>

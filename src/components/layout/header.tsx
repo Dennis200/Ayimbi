@@ -9,7 +9,7 @@ type HeaderProps = {
 export function Header({ title }: HeaderProps) {
   const pathname = usePathname();
   // Don't render header on profile page as it has its own
-  if (pathname.startsWith('/profile')) {
+  if (pathname.startsWith('/profile/')) {
     return null;
   }
   return (

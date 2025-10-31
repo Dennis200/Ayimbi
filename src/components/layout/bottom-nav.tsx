@@ -24,7 +24,7 @@ export function BottomNav() {
           if (item.isCentral) {
             return (
               <div key={item.label} className="flex justify-center items-center">
-                <Button asChild size="lg" className="rounded-full w-14 h-14 bg-purple-600 hover:bg-purple-700 shadow-lg -translate-y-4">
+                <Button asChild size="lg" className="rounded-full w-14 h-14 bg-primary hover:bg-primary/90 shadow-lg -translate-y-4">
                   <Link href={item.href}>
                     <item.icon className="w-8 h-8" />
                   </Link>
