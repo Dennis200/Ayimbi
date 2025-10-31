@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -36,8 +36,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { useEdgeStore } from '@/lib/edgestore';
 import { Progress } from '@/components/ui/progress';
+import { upload } from '@vercel/blob/client';
 
 const genres = ["Electronic", "Acoustic", "Rock", "Pop", "Hip-Hop", "Jazz", "Classical"];
 
@@ -54,7 +54,6 @@ type UploadFormValues = z.infer<typeof formSchema>;
 export default function UploadPage() {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const { edgestore } = useEdgeStore();
   const firestore = useFirestore();
   const { user } = useUser();
   const { toast } = useToast();
@@ -81,21 +80,23 @@ export default function UploadPage() {
     setLoading(true);
 
     try {
-      // 1. Upload files to EdgeStore
-      const [audioRes, artworkRes] = await Promise.all([
-        edgestore.publicFiles.upload({
-          file: data.audioFile,
-          onProgressChange: (progress) => {
-            setProgress(progress);
-          },
+      // 1. Upload files to Vercel Blob
+      const [artworkBlob, audioBlob] = await Promise.all([
+        upload(data.artworkFile.name, data.artworkFile, {
+            access: 'public',
+            handleUploadUrl: '/api/upload',
         }),
-        edgestore.publicFiles.upload({
-          file: data.artworkFile,
-        }),
+        upload(data.audioFile.name, data.audioFile, {
+            access: 'public',
+            handleUploadUrl: '/api/upload',
+            onProgress: (progress) => {
+                setProgress(progress);
+            }
+        })
       ]);
 
-      const audioUrl = audioRes.url;
-      const artworkUrl = artworkRes.url;
+      const artworkUrl = artworkBlob.url;
+      const audioUrl = audioBlob.url;
       
       // 2. Create album document in Firestore
       const albumRef = doc(collection(firestore, 'albums'));
@@ -109,7 +110,7 @@ export default function UploadPage() {
           type: 'album' as const,
       };
       
-      await setDoc(albumRef, albumData)
+      setDoc(albumRef, albumData)
         .catch(async (serverError) => {
           const permissionError = new FirestorePermissionError({
             path: albumRef.path,
@@ -139,7 +140,7 @@ export default function UploadPage() {
         createdAt: serverTimestamp(),
       };
 
-      await addDoc(songCollection, songData)
+      addDoc(songCollection, songData)
         .catch(async (serverError) => {
           const permissionError = new FirestorePermissionError({
             path: songCollection.path,
