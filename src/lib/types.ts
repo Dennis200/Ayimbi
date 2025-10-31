@@ -38,6 +38,7 @@ export type Song = {
   commentCount: number;
   lyrics?: string;
   genre?: string;
+  likeIds?: string[];
 };
 
 export type Album = {

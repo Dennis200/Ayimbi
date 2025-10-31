@@ -6,10 +6,22 @@ import type { Song } from '@/lib/types';
 import { useMusicPlayer } from '@/hooks/use-music-player';
 import { Play, Heart, MessageCircle, Share2, Download } from 'lucide-react';
 import { Button } from './ui/button';
-import { useCollection, useMemoFirebase } from '@/firebase';
-import { collection, getFirestore, query } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
+import {
+  collection,
+  getFirestore,
+  query,
+  doc,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
+  increment,
+} from 'firebase/firestore';
 import { useFirebaseApp } from '@/firebase';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 interface SongCardProps {
   song: Song;
@@ -18,8 +30,11 @@ interface SongCardProps {
 
 export function SongCard({ song, className }: SongCardProps) {
   const { play } = useMusicPlayer();
+  const { user } = useUser();
   const app = useFirebaseApp();
   const firestore = getFirestore(app);
+  const { toast } = useToast();
+
   const songsQuery = useMemoFirebase(
     () => query(collection(firestore, 'songs')),
     [firestore]
@@ -30,6 +45,34 @@ export function SongCard({ song, className }: SongCardProps) {
     if (songs) {
       play(song, songs);
     }
+  };
+
+  const isLiked = user && song.likeIds?.includes(user.uid);
+
+  const handleLike = async () => {
+    if (!user) {
+      toast({
+        title: 'Not Logged In',
+        description: 'You need to be logged in to like a song.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const songRef = doc(firestore, 'songs', song.id);
+    const likeData = {
+      likeIds: isLiked ? arrayRemove(user.uid) : arrayUnion(user.uid),
+      likes: increment(isLiked ? -1 : 1),
+    };
+
+    updateDoc(songRef, likeData).catch(async (serverError) => {
+      const permissionError = new FirestorePermissionError({
+        path: songRef.path,
+        operation: 'update',
+        requestResourceData: likeData,
+      });
+      errorEmitter.emit('permission-error', permissionError);
+    });
   };
 
   const formatCount = (count: number) => {
@@ -43,9 +86,7 @@ export function SongCard({ song, className }: SongCardProps) {
   };
 
   return (
-    <div
-      className={cn('group relative flex flex-col space-y-2', className)}
-    >
+    <div className={cn('group relative flex flex-col space-y-2', className)}>
       <div className="relative aspect-square w-full overflow-hidden rounded-md">
         <Image
           src={song.artworkUrl}
@@ -68,22 +109,29 @@ export function SongCard({ song, className }: SongCardProps) {
           {song.artistName}
         </p>
       </div>
-      <div className="flex items-center space-x-3 text-xs text-muted-foreground pt-1">
+      <div className="flex items-center space-x-4 text-xs text-muted-foreground pt-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleLike}
+          className="flex items-center gap-1 px-1 h-auto -ml-1"
+        >
+          <Heart
+            className={cn('h-5 w-5', isLiked && 'fill-red-500 text-red-500')}
+          />
+          <span className="text-sm">{formatCount(song.likes || 0)}</span>
+        </Button>
         <div className="flex items-center gap-1">
-            <Heart className="h-3.5 w-3.5" />
-            <span>{formatCount(song.likes || 0)}</span>
+          <MessageCircle className="h-4 w-4" />
+          <span>{formatCount(song.commentCount || 0)}</span>
         </div>
         <div className="flex items-center gap-1">
-            <MessageCircle className="h-3.5 w-3.5" />
-            <span>{formatCount(song.commentCount || 0)}</span>
+          <Share2 className="h-4 w-4" />
+          <span>{formatCount(song.shares || 0)}</span>
         </div>
         <div className="flex items-center gap-1">
-            <Share2 className="h-3.5 w-3.5" />
-            <span>{formatCount(song.shares || 0)}</span>
-        </div>
-        <div className="flex items-center gap-1">
-            <Download className="h-3.5 w-3.5" />
-            <span>{formatCount(song.downloadCount || 0)}</span>
+          <Download className="h-4 w-4" />
+          <span>{formatCount(song.downloadCount || 0)}</span>
         </div>
       </div>
     </div>
