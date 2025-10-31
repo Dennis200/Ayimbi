@@ -12,6 +12,8 @@ import {
   serverTimestamp,
   doc,
   addDoc,
+  setDoc,
+  updateDoc,
 } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -320,12 +322,16 @@ function SingleSongUploadForm() {
             const audioUrl = audioBlob.url;
             setProgress(95);
 
+            const songsCollection = collection(firestore, 'songs');
+            const songRef = doc(songsCollection); // Create a new doc ref with a client-side generated ID
+
             const songData = {
+              id: songRef.id,
               title: data.title,
               duration: 0, // Placeholder
               artistId: user.uid,
               artistName: user.displayName || 'Unknown Artist',
-              albumId: 'single', // Special ID for singles
+              albumId: songRef.id, // Special ID for singles (self-reference)
               albumTitle: 'Single',
               artworkUrl,
               audioUrl,
@@ -339,8 +345,7 @@ function SingleSongUploadForm() {
               createdAt: serverTimestamp(),
             };
 
-            const songRef = await addDoc(collection(firestore, 'songs'), {});
-            await updateDoc(songRef, { ...songData, id: songRef.id });
+            await setDoc(songRef, songData);
 
             setProgress(100);
             toast({

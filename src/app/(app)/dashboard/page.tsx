@@ -25,7 +25,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { EditSongDialog } from '@/components/dashboard/edit-song-dialog';
@@ -62,18 +61,37 @@ export default function DashboardPage() {
     const songRef = doc(firestore, 'songs', songToDelete.id);
 
     try {
-      // Don't await this, let the real-time listener handle the UI update
-      deleteDoc(songRef);
+      // 1. Delete Firestore document
+      await deleteDoc(songRef);
 
-      // Optional: Check if the album becomes empty and delete it too
-      if (songToDelete.albumId) {
+      // 2. Delete files from Vercel Blob storage
+      const urlsToDelete = [songToDelete.audioUrl];
+      if (songToDelete.artworkUrl) {
+         // Avoid deleting album artwork if other songs still use it
+        const isSingle = songToDelete.albumId === songToDelete.id;
+        if(isSingle) {
+            urlsToDelete.push(songToDelete.artworkUrl);
+        } else {
+            const otherSongsInAlbum = songs?.filter(s => s.albumId === songToDelete.albumId && s.id !== songToDelete.id);
+            if (!otherSongsInAlbum || otherSongsInAlbum.length === 0) {
+                urlsToDelete.push(songToDelete.artworkUrl);
+            }
+        }
+      }
+      
+      await fetch('/api/delete-blob', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ urls: urlsToDelete }),
+      });
+
+      // 3. Optional: Check if the album becomes empty and delete it too
+      if (songToDelete.albumId && songToDelete.albumId !== songToDelete.id) {
         const albumSongsQuery = query(collection(firestore, 'songs'), where('albumId', '==', songToDelete.albumId));
         const albumSongsSnapshot = await getDocs(albumSongsQuery);
-        // If the deleted song was the last one in the album
         if (albumSongsSnapshot.docs.filter(d => d.id !== songToDelete.id).length === 0) {
             const albumRef = doc(firestore, 'albums', songToDelete.albumId);
-            // Don't await this either
-            deleteDoc(albumRef);
+            await deleteDoc(albumRef);
             toast({ title: 'Album deleted', description: `Album was empty and has been removed.` });
         }
       }
@@ -174,7 +192,7 @@ export default function DashboardPage() {
                        </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon">
+                          <Button variant="ghost" size="icon" onClick={() => setSongToDelete(song)}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </AlertDialogTrigger>
@@ -183,16 +201,13 @@ export default function DashboardPage() {
                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                             <AlertDialogDescription>
                               This action cannot be undone. This will permanently delete the song
-                              "{song.title}".
+                              "{song.title}" and its associated files.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel onClick={() => setSongToDelete(null)}>Cancel</AlertDialogCancel>
                             <AlertDialogAction
-                              onClick={() => {
-                                setSongToDelete(song);
-                                handleDeleteSong();
-                              }}
+                              onClick={handleDeleteSong}
                               disabled={isDeleting}
                               className="bg-destructive hover:bg-destructive/90"
                             >
