@@ -62,19 +62,21 @@ export default function DashboardPage() {
     const songRef = doc(firestore, 'songs', songToDelete.id);
 
     try {
-      await deleteDoc(songRef);
+      // Don't await this, let the real-time listener handle the UI update
+      deleteDoc(songRef);
 
       // Optional: Check if the album becomes empty and delete it too
       if (songToDelete.albumId) {
         const albumSongsQuery = query(collection(firestore, 'songs'), where('albumId', '==', songToDelete.albumId));
         const albumSongsSnapshot = await getDocs(albumSongsQuery);
-        if (albumSongsSnapshot.empty) {
+        // If the deleted song was the last one in the album
+        if (albumSongsSnapshot.docs.filter(d => d.id !== songToDelete.id).length === 0) {
             const albumRef = doc(firestore, 'albums', songToDelete.albumId);
-            await deleteDoc(albumRef);
-            toast({ title: 'Album deleted', description: `Album "${songToDelete.albumTitle}" was empty and has been removed.` });
+            // Don't await this either
+            deleteDoc(albumRef);
+            toast({ title: 'Album deleted', description: `Album was empty and has been removed.` });
         }
       }
-
 
       toast({
         title: 'Song Deleted',
@@ -172,7 +174,7 @@ export default function DashboardPage() {
                        </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" onClick={() => setSongToDelete(song)}>
+                          <Button variant="ghost" size="icon">
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </AlertDialogTrigger>
@@ -185,13 +187,16 @@ export default function DashboardPage() {
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogCancel onClick={() => setSongToDelete(null)}>Cancel</AlertDialogCancel>
                             <AlertDialogAction
-                              onClick={handleDeleteSong}
+                              onClick={() => {
+                                setSongToDelete(song);
+                                handleDeleteSong();
+                              }}
                               disabled={isDeleting}
                               className="bg-destructive hover:bg-destructive/90"
                             >
-                              {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Delete'}
+                              {isDeleting && songToDelete?.id === song.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Delete'}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
