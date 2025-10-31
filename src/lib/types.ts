@@ -39,6 +39,7 @@ export type Song = {
   lyrics?: string;
   genre?: string;
   likeIds?: string[];
+  isExclusive?: boolean;
 };
 
 export type Album = {
