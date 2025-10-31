@@ -15,15 +15,15 @@ export default function HomePage() {
     () => query(collection(firestore, 'songs'), limit(5)),
     [firestore]
   );
-  const { data: trendingSongs, loading: songsLoading } = useCollection<Song>(
+  const { data: trendingSongs, isLoading: songsLoading } = useCollection<Song>(
     songsQuery
   );
 
   const albumsQuery = useMemoFirebase(
-    () => query(collection(firestore, 'albums'), limit(6)),
+    () => query(collection(firestore, 'albums'), limit(4)),
     [firestore]
   );
-  const { data: newReleases, loading: albumsLoading } = useCollection<Album>(
+  const { data: newReleases, isLoading: albumsLoading } = useCollection<Album>(
     albumsQuery
   );
 
@@ -46,7 +46,7 @@ export default function HomePage() {
           <h2 className="text-2xl font-semibold tracking-tight">
             Trending Now
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-x-6 gap-y-8">
             {trendingSongs?.map((song) => (
               <SongCard key={song.id} song={song} />
             ))}
@@ -57,7 +57,7 @@ export default function HomePage() {
           <h2 className="text-2xl font-semibold tracking-tight">
             New Releases
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-8">
             {newReleases?.map((album) => (
               <AlbumCard key={album.id} album={album} />
             ))}

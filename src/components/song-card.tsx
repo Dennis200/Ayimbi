@@ -9,7 +9,6 @@ import { Button } from './ui/button';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import {
   collection,
-  getFirestore,
   query,
   doc,
   updateDoc,
@@ -17,7 +16,6 @@ import {
   arrayRemove,
   increment,
 } from 'firebase/firestore';
-import { useFirebaseApp } from '@/firebase';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -31,8 +29,7 @@ interface SongCardProps {
 export function SongCard({ song, className }: SongCardProps) {
   const { play } = useMusicPlayer();
   const { user } = useUser();
-  const app = useFirebaseApp();
-  const firestore = getFirestore(app);
+  const firestore = useFirestore();
   const { toast } = useToast();
 
   const songsQuery = useMemoFirebase(
@@ -87,25 +84,25 @@ export function SongCard({ song, className }: SongCardProps) {
 
   return (
     <div className={cn('group relative flex flex-col space-y-2', className)}>
-      <div className="relative aspect-square w-full overflow-hidden rounded-md">
+      <div className="relative aspect-square w-full overflow-hidden rounded-lg shadow-lg">
         <Image
           src={song.artworkUrl}
           alt={song.title}
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
-        <div className="absolute inset-0 bg-black/20 opacity-0 transition-opacity group-hover:opacity-100" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
         <Button
           onClick={handlePlay}
           size="icon"
-          className="absolute right-3 bottom-3 h-10 w-10 rounded-full bg-primary text-primary-foreground opacity-0 shadow-lg transition-all group-hover:opacity-100 translate-y-2 group-hover:translate-y-0"
+          className="absolute right-4 bottom-4 h-12 w-12 rounded-full bg-primary/80 text-primary-foreground opacity-0 shadow-2xl backdrop-blur-sm transition-all group-hover:opacity-100 group-hover:scale-110 group-hover:bg-primary"
         >
-          <Play className="h-5 w-5 fill-current" />
+          <Play className="h-6 w-6 fill-current" />
         </Button>
       </div>
-      <div className="w-full space-y-1 text-sm">
-        <h3 className="font-medium leading-none truncate">{song.title}</h3>
-        <p className="text-xs text-muted-foreground truncate">
+      <div className="w-full space-y-1 text-base">
+        <h3 className="font-semibold leading-none truncate">{song.title}</h3>
+        <p className="text-sm text-muted-foreground truncate">
           {song.artistName}
         </p>
       </div>
@@ -115,7 +112,7 @@ export function SongCard({ song, className }: SongCardProps) {
           size="sm"
           onClick={handleLike}
           className={cn(
-              "flex items-center gap-1 px-1 h-auto -ml-1 text-xs",
+              "flex items-center gap-1.5 px-1 h-auto -ml-1 text-sm font-medium",
               isLiked ? 'text-red-500' : 'text-muted-foreground'
           )}
         >
@@ -124,15 +121,11 @@ export function SongCard({ song, className }: SongCardProps) {
           />
           <span className="text-sm">{formatCount(song.likes || 0)}</span>
         </Button>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5 text-sm">
           <MessageCircle className="h-4 w-4" />
           <span>{formatCount(song.commentCount || 0)}</span>
         </div>
-        <div className="flex items-center gap-1">
-          <Share2 className="h-4 w-4" />
-          <span>{formatCount(song.shares || 0)}</span>
-        </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5 text-sm">
           <Download className="h-4 w-4" />
           <span>{formatCount(song.downloadCount || 0)}</span>
         </div>
