@@ -1,18 +1,46 @@
-import { put } from '@vercel/blob';
+import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 import { NextResponse } from 'next/server';
  
 export async function POST(request: Request): Promise<NextResponse> {
-  const { searchParams } = new URL(request.url);
-  const filename = searchParams.get('filename');
+  const body = (await request.json()) as HandleUploadBody;
  
-  if (!filename || !request.body) {
-    return NextResponse.json({ message: 'No filename provided' }, { status: 400 });
+  try {
+    const jsonResponse = await handleUpload({
+      body,
+      request,
+      onBeforeGenerateToken: async (
+        pathname,
+        /* clientPayload */
+      ) => {
+        // Generate a client token for the browser to upload the file
+        // ⚠️ Authenticate and authorize users before generating the token.
+        // Otherwise, allows anonymous uploads.
+ 
+        return {
+          allowedContentTypes: ['image/jpeg', 'image/png', 'image/gif', 'audio/mpeg', 'audio/wav', 'audio/ogg'],
+          token: process.env.BLOB_READ_WRITE_TOKEN,
+          // Add prefix to the token to avoid client-side tampering
+          // clientPayload: { ... },
+        };
+      },
+      onUploadCompleted: async ({ blob, tokenPayload }) => {
+        // ⚠️ This callback is called after the file is uploaded to the blob store.
+        // You can use this callback to update your database with the blob details.
+        console.log('blob upload completed', blob, tokenPayload);
+ 
+        try {
+          // Perform any necessary actions after the upload is complete
+        } catch (error) {
+          throw new Error('Could not update database');
+        }
+      },
+    });
+ 
+    return NextResponse.json(jsonResponse);
+  } catch (error) {
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 400 },
+    );
   }
-
-  // The body has to be passed to the put method as a readable stream.
-  const blob = await put(filename, request.body, {
-    access: 'public',
-  });
- 
-  return NextResponse.json(blob);
 }
