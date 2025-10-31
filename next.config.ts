@@ -3,6 +3,9 @@ import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
+  serverRuntimeConfig: {
+    blobReadWriteToken: process.env.BLOB_READ_WRITE_TOKEN,
+  },
   typescript: {
     ignoreBuildErrors: true,
   },

@@ -1,8 +1,10 @@
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 import { NextResponse } from 'next/server';
- 
+import getConfig from 'next/config';
+
 export async function POST(request: Request): Promise<NextResponse> {
   const body = (await request.json()) as HandleUploadBody;
+  const { serverRuntimeConfig } = getConfig();
  
   try {
     const jsonResponse = await handleUpload({
@@ -18,7 +20,7 @@ export async function POST(request: Request): Promise<NextResponse> {
  
         return {
           allowedContentTypes: ['image/jpeg', 'image/png', 'image/gif', 'audio/mpeg', 'audio/wav', 'audio/ogg'],
-          token: process.env.BLOB_READ_WRITE_TOKEN,
+          token: serverRuntimeConfig.blobReadWriteToken,
           // Add prefix to the token to avoid client-side tampering
           // clientPayload: { ... },
         };
