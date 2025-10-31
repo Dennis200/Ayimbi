@@ -85,26 +85,30 @@ service cloud.firestore {
      * @description Rules for the /albums/{albumId} collection.
      * @path /albums/{albumId}
      * @allow (get, list): Any user can read album data.
-     * @allow (create, update, delete): No one can modify album data without custom authorization logic.
+     * @allow (create): An authenticated user can create an album if the artistId matches their UID.
+     * @allow (update, delete): No one can modify album data without custom authorization logic.
      * @deny (create, update, delete): Any unauthenticated user.
      * @principle Public read access with restricted writes.
      */
     match /albums/{albumId} {
       allow get, list: if true;
-      allow create, update, delete: if false;
+      allow create: if isSignedIn() && request.resource.data.artistId == request.auth.uid;
+      allow update, delete: if false;
     }
 
     /**
      * @description Rules for the /songs/{songId} collection.
      * @path /songs/{songId}
      * @allow (get, list): Any user can read song data.
-     * @allow (create, update, delete): No one can modify song data without custom authorization logic.
+     * @allow (create): An authenticated user can create a song if the artistId matches their UID.
+     * @allow (update, delete): No one can modify song data without custom authorization logic.
      * @deny (create, update, delete): Any unauthenticated user.
      * @principle Public read access with restricted writes.
      */
     match /songs/{songId} {
       allow get, list: if true;
-      allow create, update, delete: if false;
+      allow create: if isSignedIn() && request.resource.data.artistId == request.auth.uid;
+      allow update, delete: if false;
     }
 
     /**
