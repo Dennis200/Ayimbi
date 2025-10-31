@@ -1,8 +1,9 @@
+
 'use client';
 
 import { useMemo, useState } from 'react';
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, doc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { collection, query, where, doc, deleteDoc, getDocs } from 'firebase/firestore';
 import type { User as UserType, Song, Album } from '@/lib/types';
 import { Header } from '@/components/layout/header';
 import { Button } from '@/components/ui/button';
