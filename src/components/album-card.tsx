@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -5,10 +6,9 @@ import type { Album } from '@/lib/types';
 import { Play } from 'lucide-react';
 import { Button } from './ui/button';
 import { useMusicPlayer } from '@/hooks/use-music-player';
-import { useCollection } from '@/firebase';
+import { useCollection, useMemoFirebase } from '@/firebase';
 import { collection, getFirestore, query, where } from 'firebase/firestore';
 import { useFirebaseApp } from '@/firebase';
-import { useMemo } from 'react';
 
 interface AlbumCardProps {
   album: Album;
@@ -20,7 +20,7 @@ export function AlbumCard({ album, className }: AlbumCardProps) {
   const app = useFirebaseApp();
   const firestore = getFirestore(app);
 
-  const songsQuery = useMemo(
+  const songsQuery = useMemoFirebase(
     () =>
       query(collection(firestore, 'songs'), where('albumId', '==', album.id)),
     [firestore, album.id]
